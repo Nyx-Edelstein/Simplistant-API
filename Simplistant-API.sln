@@ -3,7 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simplistant-API", "Simplistant-API.csproj", "{41D95A4D-43C1-4B82-BCFE-A33A62FCB8A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simplistant-API.Web", ".\Simplistant-API.Web\Simplistant-API.Web.csproj", "{41D95A4D-43C1-4B82-BCFE-A33A62FCB8A6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{52D18634-0809-4F1E-92A7-41A33EBC2EF6} = {52D18634-0809-4F1E-92A7-41A33EBC2EF6}
+		{D752C2E9-7D93-4D91-A3D5-10A26709A237} = {D752C2E9-7D93-4D91-A3D5-10A26709A237}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simplistant-API.Models", ".\Simplistant-API.Models\Simplistant-API.Models.csproj", "{D752C2E9-7D93-4D91-A3D5-10A26709A237}"
+	ProjectSection(ProjectDependencies) = postProject
+		{52D18634-0809-4F1E-92A7-41A33EBC2EF6} = {52D18634-0809-4F1E-92A7-41A33EBC2EF6}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simplistant-API.Repository", ".\Simplistant-API.Repository\Simplistant-API.Repository.csproj", "{52D18634-0809-4F1E-92A7-41A33EBC2EF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +26,14 @@ Global
 		{41D95A4D-43C1-4B82-BCFE-A33A62FCB8A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41D95A4D-43C1-4B82-BCFE-A33A62FCB8A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41D95A4D-43C1-4B82-BCFE-A33A62FCB8A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D752C2E9-7D93-4D91-A3D5-10A26709A237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D752C2E9-7D93-4D91-A3D5-10A26709A237}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D752C2E9-7D93-4D91-A3D5-10A26709A237}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D752C2E9-7D93-4D91-A3D5-10A26709A237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52D18634-0809-4F1E-92A7-41A33EBC2EF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52D18634-0809-4F1E-92A7-41A33EBC2EF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52D18634-0809-4F1E-92A7-41A33EBC2EF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52D18634-0809-4F1E-92A7-41A33EBC2EF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
