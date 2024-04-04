@@ -15,6 +15,7 @@ using static BCrypt.Net.BCrypt;
 namespace Simplistant_API.Controllers
 {
     [ApiController]
+    [Route("/[controller]/[action]")]
     public class AccountController : ControllerBase
     {
         private IRepository<LoginData> _loginDataRepository { get; }
@@ -107,7 +108,7 @@ namespace Simplistant_API.Controllers
             var success = _emailProvider.SendConfirmationEmail(request.Username, request.Email, confirmationToken);
             if (success)
             {
-                response.Messages.Add($"Follow instructions sent to '{request.Email}' in order to enable recovery of your account.");
+                response.Messages.Add($"Follow instructions sent to '{request.Email}' in order to enable recovery of your account. You may need to check your spam folder.");
             }
             else
             {
@@ -178,7 +179,7 @@ namespace Simplistant_API.Controllers
 
             //"Success" in any case -- do not reveal data unnecessarily
             var response = new MessageResponse();
-            response.Messages.Add("If the provided information is on record, a recovery email has been sent.");
+            response.Messages.Add("If the provided information is on record, a recovery email has been sent. You may need to check your spam folder.");
             return response;
         }
 
@@ -268,7 +269,7 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
-        [AcceptVerbs("Get", "Post")]
+        [HttpPost]
         [Authorize]
         public MessageResponse ResendConfirmationEmail()
         {
@@ -305,11 +306,11 @@ namespace Simplistant_API.Controllers
             }
 
             //Success
-            response.Messages.Add("A confirmation email has been sent.");
+            response.Messages.Add("A confirmation email has been sent. You may need to check your spam folder.");
             return response;
         }
-        
-        [AcceptVerbs("Get", "Post")]
+
+        [HttpPost]
         [Authorize]
         public MessageResponse Logout()
         {
@@ -319,7 +320,7 @@ namespace Simplistant_API.Controllers
             return new MessageResponse();
         }
 
-        [AcceptVerbs("Get", "Post")]
+        [HttpPost]
         [Authorize]
         public MessageResponse LogoutAllDevices()
         {
@@ -441,7 +442,7 @@ namespace Simplistant_API.Controllers
             var success = _emailProvider.SendConfirmationEmail(username, request.Email, confirmationToken);
             if (success)
             {
-                response.Messages.Add($"Follow instructions sent to '{request.Email}' to confirm the new address. Account recovery will not be possible until the new address is confirmed.");
+                response.Messages.Add($"Follow instructions sent to '{request.Email}' to confirm the new address. You may need to check your spam folder.");
             }
             else
             {

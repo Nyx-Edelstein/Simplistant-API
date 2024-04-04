@@ -24,7 +24,10 @@ namespace Simplistant_API.Extensions
         {
             if (!httpContext.Request.Cookies.ContainsKey("USER_IDENTITY"))
             {
-                throw new Exception("User identity cookie not found. This shouldn't happen if the user is authenticated.");
+                return new UserIdentity
+                {
+                    Username = "Guest"
+                };
             }
 
             var serialized = httpContext.Request.Cookies["USER_IDENTITY"];
@@ -45,11 +48,13 @@ namespace Simplistant_API.Extensions
         }
         
         //We need to not store the BSON Id from the dataitem object.
-        private class UserIdentity
+        public class UserIdentity
         {
-            internal string Username { get; set; }
-            internal string AuthToken { get; set; }
-            internal DateTime Expiry { get; set; }
+            public string Username { get; set; }
+            public string AuthToken { get; set; }
+            public DateTime Expiry { get; set; }
+
+            internal UserIdentity() { }
 
             internal UserIdentity(AuthData authData)
             {

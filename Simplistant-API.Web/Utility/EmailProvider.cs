@@ -31,22 +31,23 @@ namespace Simplistant_API.Utility
 
         private bool SendEmail(string username, string email, string token, Func<string, string, string> template)
         {
+            var credentials = GetCredentials();
             using var client = new SmtpClient("smtp.gmail.com", 587)
             {
-                Credentials = GetCredentials(),
-                EnableSsl = true
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = credentials
             };
-            using var mailMessage = new MailMessage("admin@chaossnek.com", email)
+            using var message = new MailMessage(credentials.UserName, email)
             {
-                Subject = $"LotG - Password Recovery For {username}",
-                SubjectEncoding = Encoding.UTF8,
+                Subject = $"Simplistant - Password Recovery For {username}",
                 Body = template(username, token),
-                BodyEncoding = Encoding.UTF8,
                 IsBodyHtml = true
             };
             try
             {
-                client.Send(mailMessage);
+                client.Send(message);
                 return true;
             }
             catch (SmtpException ex)
@@ -54,8 +55,9 @@ namespace Simplistant_API.Utility
                 var detailedMessage = ex.DetailedExceptionMessage();
                 var logItem = new ExceptionLog
                 {
-                    Message = $"Failure to send recovery email for user: {username}; email: {email}.\r\n\r\n-----{detailedMessage}",
+                    Message = $"Failure to send email for user: {username}; email: {email}.\r\n\r\n-----{detailedMessage}",
                     ExceptionType = ex.GetType().FullName ?? "Unknown",
+                    TimeStamp = DateTime.UtcNow
                 };
                 _exceptionLogRepository.Upsert(logItem);
                 return false;

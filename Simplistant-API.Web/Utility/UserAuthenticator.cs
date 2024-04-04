@@ -47,8 +47,7 @@ namespace Simplistant_API.Utility
             _authDataRepository.RemoveWhere(x => x.Expiry < DateTime.UtcNow);
 
             //Get existing data
-            var existingAuthData = _authDataRepository
-                .GetWhere(x => string.Equals(x.Username, username, StringComparison.InvariantCultureIgnoreCase));
+            var existingAuthData = _authDataRepository.GetWhere(x => x.Username == username);
 
             //Find if any are valid
             var authData = existingAuthData.FirstOrDefault(x => Verify(authToken, x.AuthToken));
@@ -58,7 +57,7 @@ namespace Simplistant_API.Utility
                 context.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, username),
-                }));
+                }, "Authenticated"));
 
                 //Determine if a session needs to be generated
                 //This prevents the user from having to login again if they use the service regularly

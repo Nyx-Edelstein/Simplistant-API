@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.CookiePolicy;
 using Simplistant_API.Data.System;
 using Simplistant_API.Data.Users;
@@ -20,20 +21,27 @@ namespace Simplistant_API
             builder.Services.AddSwaggerGen();
 
             //System repositories
-            builder.Services.AddSingleton(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
-            builder.Services.AddSingleton(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
 
             //User repositories
-            builder.Services.AddSingleton(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
-            builder.Services.AddSingleton(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
-            builder.Services.AddSingleton(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
-            builder.Services.AddSingleton(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
 
             //Data repositories
 
             //Misc utilities
             builder.Services.AddTransient<IEmailProvider, EmailProvider>();
             builder.Services.AddTransient<IUserAuthenticator, UserAuthenticator>();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
 
             //-----------
             var app = builder.Build();
@@ -52,7 +60,8 @@ namespace Simplistant_API
                     var exceptionLog = new ExceptionLog
                     {
                         ExceptionType = e.GetType().ToString(),
-                        Message = detailedMessage
+                        Message = detailedMessage,
+                        TimeStamp = DateTime.UtcNow
                     };
                     exceptionLogRepository?.Upsert(exceptionLog);
                     throw;
@@ -83,8 +92,13 @@ namespace Simplistant_API
             });
 
             //Misc
+            app.UseRouting();
             app.UseAuthorization(); //Keep?
-            app.MapControllers();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute("default", "{controller}/{action}/{data?}");
+            });
+            //app.MapControllers();
 
             app.Run();
         }
