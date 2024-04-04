@@ -75,12 +75,13 @@ namespace Simplistant_API
                 await userAuthenticator.Authenticate(context, next);
             });
             
+            //todo: DISABLE THIS FOR PRODUCTION
             //Swagger
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
 
             //Https Configuration
             app.UseHttpsRedirection();
@@ -93,12 +94,11 @@ namespace Simplistant_API
 
             //Misc
             app.UseRouting();
-            app.UseAuthorization(); //Keep?
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute("default", "{controller}/{action}/{data?}");
             });
-            //app.MapControllers();
 
             app.Run();
         }
