@@ -6,6 +6,8 @@ using Simplistant_API.Extensions;
 using Simplistant_API.Repository;
 using Simplistant_API.Utility;
 using Simplistant_API.Utility.Interface;
+using System.Net;
+using System.Text;
 
 namespace Simplistant_API
 {
@@ -74,7 +76,7 @@ namespace Simplistant_API
                 var userAuthenticator = app.Services.GetService<IUserAuthenticator>();
                 await userAuthenticator.Authenticate(context, next);
             });
-            
+
             //todo: DISABLE THIS FOR PRODUCTION
             //Swagger
             //if (app.Environment.IsDevelopment())

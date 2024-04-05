@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Simplistant_API.Data.System;
 using Simplistant_API.Data.Users;
 using Simplistant_API.DTO;
 using Simplistant_API.DTO.Account;
@@ -18,6 +21,7 @@ namespace Simplistant_API.Controllers
     [Route("/[controller]/[action]")]
     public class AccountController : ControllerBase
     {
+        private IRepository<ConfigItem> _configItemRepository { get; }
         private IRepository<LoginData> _loginDataRepository { get; }
         private IRepository<AuthData> _authDataRepository { get; }
         private IRepository<EmailData> _emailDataRepository { get; }
@@ -28,6 +32,7 @@ namespace Simplistant_API.Controllers
 
         public AccountController
         (
+            IRepository<ConfigItem> configItemRepository,
             IRepository<LoginData> loginDataRepository,
             IRepository<AuthData> authDataRepository,
             IRepository<EmailData> emailDataRepository,
@@ -36,6 +41,7 @@ namespace Simplistant_API.Controllers
             IUserAuthenticator userAuthenticator
         )
         {
+            _configItemRepository = configItemRepository;
             _loginDataRepository = loginDataRepository;
             _authDataRepository = authDataRepository;
             _emailDataRepository = emailDataRepository;
@@ -128,11 +134,24 @@ namespace Simplistant_API.Controllers
 
         [HttpPost]
         //Todo: auth attribute
-        public MessageResponse RegisterOAuth(RegisterOAuthRequest request)
+        public MessageResponse RegisterOAuth()
         {
-            //Do OAuth shit, store token
-            //todo: implement
-            throw new NotImplementedException();
+            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
+            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
+            var redirect = $"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}";
+            var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&client_secret={client_secret}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
+
+            HttpContext.Response.Redirect(oauth_url, true);
+            return new MessageResponse();
+        }
+
+        [HttpGet]
+        public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
+        {
+            throw new Exception($"OAuth Callback Success. code:{code}, scope: {scope}, authuser: {authuser}, prompt: {prompt}");
+            
+
+            return new MessageResponse();
         }
 
         //Todo: auth attribute
