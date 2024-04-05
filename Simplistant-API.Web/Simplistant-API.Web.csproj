@@ -8,7 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\privacy-policy.html" />
+    <Content Remove="wwwroot\terms-and-conditions.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include=".\.github\workflows\simplistant-api.yml" />
+    <None Include="wwwroot\privacy-policy.html" />
+    <None Include="wwwroot\terms-and-conditions.html" />
     <None Include="wwwroot\index.html" />
   </ItemGroup>
 
