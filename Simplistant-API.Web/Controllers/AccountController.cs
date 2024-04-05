@@ -134,7 +134,7 @@ namespace Simplistant_API.Controllers
 
         [HttpPost]
         //Todo: auth attribute
-        public MessageResponse RegisterOAuth()
+        public void RegisterOAuth()
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
@@ -142,7 +142,6 @@ namespace Simplistant_API.Controllers
             var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&client_secret={client_secret}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
 
             HttpContext.Response.Redirect(oauth_url, true);
-            return new MessageResponse();
         }
 
         [HttpGet]
