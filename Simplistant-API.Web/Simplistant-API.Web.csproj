@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <None Include=".\.github\workflows\simplistant-api.yml" />
+    <None Include="wwwroot\index.html" />
   </ItemGroup>
 
   <ItemGroup>

@@ -93,6 +93,8 @@ namespace Simplistant_API
             });
 
             //Misc
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
