@@ -153,7 +153,7 @@ namespace Simplistant_API.Controllers
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             
-            var token_url = $"https://accounts.google.com/o/oauth2/token?client_id={client_id}&client_secret={client_secret}&code={code}&    grant_type=authorization_code&redirect_uri={redirect}&access_type=offline";
+            var token_url = $"https://accounts.google.com/o/oauth2/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={redirect}&access_type=offline";
     
             using var client = new HttpClient();
             var json = client.GetAsync(token_url).Result.Content.ReadAsStringAsync().Result;
