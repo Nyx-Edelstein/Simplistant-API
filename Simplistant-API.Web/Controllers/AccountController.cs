@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Simplistant_API.Data.System;
 using Simplistant_API.Data.Users;
 using Simplistant_API.DTO;
@@ -149,17 +150,21 @@ namespace Simplistant_API.Controllers
         [HttpGet]
         public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
         {
-            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
-            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
-            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            
-            var token_url = $"https://accounts.google.com/o/oauth2/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={redirect}&access_type=offline";
-    
+            const string url = $"https://accounts.google.com/o/oauth2/token";
+            var content = JsonContent.Create(new
+            {
+                client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value,
+                client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value,
+                code = code,
+                redirect_uri = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}"),
+                grant_type = "authorization_code",
+                access_type = "offline"
+            });
+
             using var client = new HttpClient();
-            var json = client.GetAsync(token_url).Result.Content.ReadAsStringAsync().Result;
+            var json = client.PostAsync(url, content).Result;
 
             var response = new MessageResponse();
-            response.Messages.Add($"Request made: {token_url}");
             response.Messages.Add($"Response: {json}");
             return response;
         }
