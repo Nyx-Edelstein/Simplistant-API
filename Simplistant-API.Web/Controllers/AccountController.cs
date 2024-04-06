@@ -21,6 +21,7 @@ namespace Simplistant_API.Controllers
     [Route("/[controller]/[action]")]
     public class AccountController : ControllerBase
     {
+        public IRepository<ExceptionLog> _exceptionLogRepository { get; }
         private IRepository<ConfigItem> _configItemRepository { get; }
         private IRepository<LoginData> _loginDataRepository { get; }
         private IRepository<AuthData> _authDataRepository { get; }
@@ -32,6 +33,7 @@ namespace Simplistant_API.Controllers
 
         public AccountController
         (
+            IRepository<ExceptionLog> exceptionLogRepository,
             IRepository<ConfigItem> configItemRepository,
             IRepository<LoginData> loginDataRepository,
             IRepository<AuthData> authDataRepository,
@@ -41,6 +43,7 @@ namespace Simplistant_API.Controllers
             IUserAuthenticator userAuthenticator
         )
         {
+            _exceptionLogRepository = exceptionLogRepository;
             _configItemRepository = configItemRepository;
             _loginDataRepository = loginDataRepository;
             _authDataRepository = authDataRepository;
@@ -141,25 +144,25 @@ namespace Simplistant_API.Controllers
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
 
+            var log = new ExceptionLog
+            {
+                ExceptionType = "Log",
+                Message = $"OAuth Attempted. Url: {oauth_url}"
+            };
+            _exceptionLogRepository.Upsert(log);
+
             return new RedirectResult(oauth_url, true);
-        }
-
-        [HttpGet]
-        public string RegisterOAuthTestURL()
-        {
-            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
-            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
-            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
-
-            return oauth_url;
         }
 
         [HttpGet]
         public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
         {
-            throw new Exception($"OAuth Callback Success. code:{code}, scope: {scope}, authuser: {authuser}, prompt: {prompt}");
-            
+            var log = new ExceptionLog
+            {
+                ExceptionType = "Log",
+                Message = $"OAuth Callback Success. code:{code}, scope: {scope}, authuser: {authuser}, prompt: {prompt}"
+            };
+            _exceptionLogRepository.Upsert(log);
 
             return new MessageResponse();
         }
