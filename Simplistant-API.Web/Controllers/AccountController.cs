@@ -150,7 +150,7 @@ namespace Simplistant_API.Controllers
         [HttpGet]
         public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
         {
-            const string url = $"https://accounts.google.com/o/oauth2/token";
+            const string url = $"https://oauth2.googleapis.com/token";
             var content = JsonContent.Create(new
             {
                 client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value,
