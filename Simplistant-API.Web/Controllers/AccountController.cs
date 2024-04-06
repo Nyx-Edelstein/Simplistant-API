@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -56,7 +57,7 @@ namespace Simplistant_API.Controllers
 
         [HttpPost]
         //Todo: auth attribute
-        public MessageResponse RegisterUsernamePassword(RegisterUsernamePasswordRequest request)
+        public MessageResponse Register(RegisterRequest request)
         {
             var response = new MessageResponse();
 
@@ -136,40 +137,6 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
-        [HttpGet]
-        //Todo: auth attribute
-        public ActionResult RegisterOAuth()
-        {
-            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
-            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=offline&scope=email&prompt=consent";
-
-            return new RedirectResult(oauth_url, false);
-        }
-
-        [HttpGet]
-        public string OAuth(string code, string scope, string authuser, string prompt)
-        {
-            const string url = $"https://oauth2.googleapis.com/token";
-            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
-            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
-            var redirect = $"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}";
-            using var client = new HttpClient();
-            using var content = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("client_id", client_id),
-                new KeyValuePair<string, string>("client_secret", client_secret),
-                new KeyValuePair<string, string>("code", code),
-                new KeyValuePair<string, string>("redirect_uri", redirect),
-                new KeyValuePair<string, string>("grant_type", "authorization_code"),
-            });
-            content.Headers.Clear();
-            content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
-            
-            return json;
-        }
-
         //Todo: auth attribute
         [HttpPost]
         public MessageResponse Login(LoginRequest request)
@@ -188,6 +155,46 @@ namespace Simplistant_API.Controllers
             //Success
             _userAuthenticator.GenerateSession(HttpContext, request.Username);
             return response;
+        }
+
+        [HttpGet]
+        //Todo: auth attribute
+        public ActionResult LoginOAuth()
+        {
+            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
+            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
+            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent";
+
+            return new RedirectResult(oauth_url, false);
+        }
+
+        [HttpGet]
+        public string OAuth(string code)
+        {
+            const string url = $"https://oauth2.googleapis.com/token";
+            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
+            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
+            var redirect = $"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}";
+            using var client = new HttpClient();
+            using var content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("client_id", client_id),
+                new KeyValuePair<string, string>("client_secret", client_secret),
+                new KeyValuePair<string, string>("code", code),
+                new KeyValuePair<string, string>("redirect_uri", redirect),
+                new KeyValuePair<string, string>("grant_type", "authorization_code"),
+            });
+            content.Headers.Clear();
+            content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
+            var json_obj = JsonDocument.Parse(json);
+            var access_token = json_obj.RootElement.GetProperty("access_token").ToString();
+
+            //Use access token to get user email
+            //Create a user login of type OAuth if it doesn't exist
+            //Create auth ticket
+
+            return access_token;
         }
 
         [HttpPost]
@@ -349,6 +356,7 @@ namespace Simplistant_API.Controllers
         [Authorize]
         public MessageResponse Logout()
         {
+            //Todo: clear cookies
             var username = HttpContext.GetCurrentUser();
             var authToken = HashPassword(HttpContext.GetUserAuthToken());
             _authDataRepository.RemoveWhere(x => x.Username == username && x.AuthToken == authToken);
@@ -359,6 +367,7 @@ namespace Simplistant_API.Controllers
         [Authorize]
         public MessageResponse LogoutAllDevices()
         {
+            //Todo: clear cookies
             var username = HttpContext.GetCurrentUser();
             _authDataRepository.RemoveWhere(x => x.Username == username);
             return new MessageResponse();
