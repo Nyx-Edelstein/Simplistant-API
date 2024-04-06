@@ -153,7 +153,7 @@ namespace Simplistant_API.Controllers
             const string url = $"https://oauth2.googleapis.com/token";
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
-            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
+            var redirect = $"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}";
             using var client = new HttpClient();
             using var content = new FormUrlEncodedContent(new[]
             {
