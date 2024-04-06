@@ -151,18 +151,22 @@ namespace Simplistant_API.Controllers
         public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
         {
             const string url = $"https://oauth2.googleapis.com/token";
-            var content = JsonContent.Create(new
-            {
-                client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value,
-                client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value,
-                code = code,
-                redirect_uri = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}"),
-                grant_type = "authorization_code",
-                access_type = "offline"
-            });
-
+            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
+            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
+            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             using var client = new HttpClient();
-            var json = client.PostAsync(url, content).Result;
+            using var content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("client_id", client_id),
+                new KeyValuePair<string, string>("client_secret", client_secret),
+                new KeyValuePair<string, string>("code", code),
+                new KeyValuePair<string, string>("redirect_uri", redirect),
+                new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                new KeyValuePair<string, string>("access_type", "offline")
+            });
+            content.Headers.Clear();
+            content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
 
             var response = new MessageResponse();
             response.Messages.Add($"Response: {json}");
