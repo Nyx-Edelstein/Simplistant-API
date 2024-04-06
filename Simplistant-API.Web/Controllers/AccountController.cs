@@ -137,22 +137,14 @@ namespace Simplistant_API.Controllers
 
         [HttpGet]
         //Todo: auth attribute
-        public string RegisterOAuth()
+        public ActionResult RegisterOAuth()
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
 
-            var log = new ExceptionLog
-            {
-                ExceptionType = "Log",
-                Message = $"OAuth Attempted. Url: {oauth_url}"
-            };
-            _exceptionLogRepository.Upsert(log);
-
-            return oauth_url;
-            //return new RedirectResult(oauth_url, true);
+            return new RedirectResult(oauth_url, false);
         }
 
         [HttpGet]
