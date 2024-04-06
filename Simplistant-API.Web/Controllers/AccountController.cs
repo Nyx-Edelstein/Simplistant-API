@@ -137,7 +137,7 @@ namespace Simplistant_API.Controllers
 
         [HttpGet]
         //Todo: auth attribute
-        public ActionResult RegisterOAuth()
+        public string RegisterOAuth()
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
@@ -151,7 +151,8 @@ namespace Simplistant_API.Controllers
             };
             _exceptionLogRepository.Upsert(log);
 
-            return new RedirectResult(oauth_url, true);
+            return oauth_url;
+            //return new RedirectResult(oauth_url, true);
         }
 
         [HttpGet]
