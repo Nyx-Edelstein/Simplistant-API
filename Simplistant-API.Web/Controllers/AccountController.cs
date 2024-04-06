@@ -155,7 +155,7 @@ namespace Simplistant_API.Controllers
             var fileLoc = Path.GetFileName(@"..\System.ldb");
             var data = $"database_file:{fileLoc}; oauth_url: {oauth_url}";
 
-            return oauth_url;
+            return data;
         }
 
         [HttpGet]
