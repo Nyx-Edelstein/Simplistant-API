@@ -148,7 +148,7 @@ namespace Simplistant_API.Controllers
         }
 
         [HttpGet]
-        public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
+        public string OAuth(string code, string scope, string authuser, string prompt)
         {
             const string url = $"https://oauth2.googleapis.com/token";
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
@@ -166,12 +166,8 @@ namespace Simplistant_API.Controllers
             content.Headers.Clear();
             content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
             var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
-
-            var response = new MessageResponse();
-            response.Messages.Add($"Redirect (Raw): {Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            response.Messages.Add($"Redirect (Encoded): {redirect}");
-            response.Messages.Add($"Response: {json}");
-            return response;
+            
+            return json;
         }
 
         //Todo: auth attribute
