@@ -145,15 +145,14 @@ namespace Simplistant_API.Controllers
         }
 
         [HttpGet]
-        public string RegisterOAuthTestURL()
+        public string RegisterOAuthTestURL(string path)
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
 
-            var fileLoc = Path.GetFileName(@"..\System.ldb");
-            var data = $"database_file:{fileLoc}; oauth_url: {oauth_url}";
+            var data = $"path: {path}; exists: {Path.Exists(path)}; oauth_url: {oauth_url}";
 
             return data;
         }
