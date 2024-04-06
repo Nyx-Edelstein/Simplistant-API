@@ -142,7 +142,7 @@ namespace Simplistant_API.Controllers
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=offline&scope=email&prompt=consent";
+            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent";
 
             return new RedirectResult(oauth_url, false);
         }
@@ -168,6 +168,8 @@ namespace Simplistant_API.Controllers
             var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
 
             var response = new MessageResponse();
+            response.Messages.Add($"Redirect (Raw): {Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
+            response.Messages.Add($"Redirect (Encoded): {redirect}");
             response.Messages.Add($"Response: {json}");
             return response;
         }
