@@ -140,9 +140,8 @@ namespace Simplistant_API.Controllers
         public ActionResult RegisterOAuth()
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
-            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
+            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
 
             return new RedirectResult(oauth_url, false);
         }
@@ -150,14 +149,18 @@ namespace Simplistant_API.Controllers
         [HttpGet]
         public MessageResponse OAuth(string code, string scope, string authuser, string prompt)
         {
-            var log = new ExceptionLog
-            {
-                ExceptionType = "Log",
-                Message = $"OAuth Callback Success. code:{code}, scope: {scope}, authuser: {authuser}, prompt: {prompt}"
-            };
-            _exceptionLogRepository.Upsert(log);
+            var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
+            var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
+            var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
+            
+            string url = $"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&    grant_type=authorization_code&redirect_uri={redirect}&access_type=online";
+    
+            using var client = new HttpClient();
+            var json = client.GetAsync(url).Result.Content.ReadAsStringAsync().Result;
 
-            return new MessageResponse();
+            var response = new MessageResponse();
+            response.Messages.Add(json);
+            return response;
         }
 
         //Todo: auth attribute
