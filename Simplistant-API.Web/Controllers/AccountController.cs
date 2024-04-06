@@ -152,6 +152,9 @@ namespace Simplistant_API.Controllers
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $@"https://accounts.google.com/o/oauth2/v2/auth?access_type=online&client_id={client_id}&redirect_uri={redirect}&response_type=code&scope=email&prompt=consent";
 
+            var fileLoc = Path.GetFileName(@"..\System.ldb");
+            var data = $"database_file:{fileLoc}; oauth_url: {oauth_url}";
+
             return oauth_url;
         }
 
