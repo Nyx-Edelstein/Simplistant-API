@@ -159,7 +159,8 @@ namespace Simplistant_API.Controllers
             var json = client.GetAsync(token_url).Result.Content.ReadAsStringAsync().Result;
 
             var response = new MessageResponse();
-            response.Messages.Add(json);
+            response.Messages.Add($"Request made: {token_url}");
+            response.Messages.Add($"Response: {json}");
             return response;
         }
 
