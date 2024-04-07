@@ -24,12 +24,12 @@ namespace Simplistant_API.Utility
         }
 
         public bool SendConfirmationEmail(string username, string email, string confirmationToken)
-            => SendEmail(username, email, confirmationToken, ConfirmationTemplate);
+            => SendEmail(username, email, confirmationToken, "Email Confirmation", ConfirmationTemplate);
 
         public bool SendRecoveryEmail(string username, string email, string recoveryToken)
-            => SendEmail(username, email, recoveryToken, RecoveryTemplate);
+            => SendEmail(username, email, recoveryToken, "Password Recovery", RecoveryTemplate);
 
-        private bool SendEmail(string username, string email, string token, Func<string, string, string> template)
+        private bool SendEmail(string username, string email, string token, string subject, Func<string, string, string> template)
         {
             var credentials = GetCredentials();
             using var client = new SmtpClient("smtp.gmail.com", 587)
@@ -42,7 +42,7 @@ namespace Simplistant_API.Utility
             };
             using var message = new MailMessage(credentials.UserName, email)
             {
-                Subject = $"Simplistant - Password Recovery For {username}",
+                Subject = $"Simplistant - {subject} For {username}",
                 Body = template(username, token),
                 IsBodyHtml = true
             };

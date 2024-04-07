@@ -97,6 +97,15 @@ namespace Simplistant_API.Controllers
                 return response;
             }
 
+            //Ensure email isn't being used for an OAuth account
+            var existingOAuthAccount = _loginDataRepository.GetWhere(x => x.Username == request.Email).FirstOrDefault();
+            if (existingOAuthAccount != null)
+            {
+                response.Status = ResponseStatus.Error;
+                response.Messages.Add($"Email address '{request.Email}' is in use by an OAuth account. Try signing in with Google instead.");
+                return response;
+            }
+
             //Generate and store login data
             var loginData = new LoginData
             {
@@ -214,11 +223,20 @@ namespace Simplistant_API.Controllers
             var jwt = handler.ReadJsonWebToken(id_token);
             var email = jwt.GetClaim("email").Value;
 
-            //Lookup existing user
+            //Lookup existing user by recovery email
+            //(They may already have an account with this email address)
+            var emailData = _emailDataRepository.GetWhere(x => x.RecoveryEmail == email).FirstOrDefault();
+            if (emailData != null)
+            {
+                //Proceed with login as if they used username/password
+                _userAuthenticator.GenerateSession(HttpContext, emailData.Username);
+                return response;
+            }
+
+            //Otherwise, create new login data if it doesn't already exist
             var loginData = _loginDataRepository.GetWhere(x => x.Username == email).FirstOrDefault();
             if (loginData == null)
             {
-                //Create a new user if one doesn't already exist
                 loginData = new LoginData
                 {
                     Username = email,
@@ -227,8 +245,7 @@ namespace Simplistant_API.Controllers
                 _loginDataRepository.Upsert(loginData);
             }
 
-            //Success; generate a session
-            //The user is now logged in as if they used username/password
+            //Success
             _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
             return response;
         }
@@ -535,39 +552,17 @@ namespace Simplistant_API.Controllers
         }
 
         [HttpGet]
-        public MessageResponse GetUserData(string username)
+        public string DebugClearAllData()
         {
-            var response = new MessageResponse();
+            _loginDataRepository.RemoveWhere(x => true);
+            _emailDataRepository.RemoveWhere(x => true);
+            _authDataRepository.RemoveWhere(x => true);
+            _recoveryDataRepository.RemoveWhere(x => true);
 
-            var loginData = _loginDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
-            if (loginData == null)
-            {
-                response.Messages.Add($"{username} not found");
-                return response;
-            }
-            else
-            {
-                response.Messages.Add($"{username} has an account of type '{(LoginType)loginData.LoginType}'");
-            }
+            var _exceptionLogRepository = RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System);
+            _exceptionLogRepository.RemoveWhere(x => true);
 
-            var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
-            if (emailData != null)
-            {
-                response.Messages.Add($"{username} has a recovery email of '{emailData.RecoveryEmail}'");
-                response.Messages.Add($"{username} email confirmed: {emailData.EmailConfirmed}");
-            }
-
-            var authData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
-            if (authData != null)
-            {
-                response.Messages.Add($"{username} is currently logged in.");
-            }
-            else
-            {
-                response.Messages.Add($"{username} is not logged in.");
-            }
-
-            return response;
+            return "Databases cleared.";
         }
 
         private static string? ValidateStrongPassword(string password)
