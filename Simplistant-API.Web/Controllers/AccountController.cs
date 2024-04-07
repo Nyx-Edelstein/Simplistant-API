@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Simplistant_API.Data.System;
 using Simplistant_API.Data.Users;
 using Simplistant_API.DTO;
@@ -164,7 +165,7 @@ namespace Simplistant_API.Controllers
 
         [HttpGet]
         //Todo: auth attribute
-        public string OAuth(string code)
+        public MessageResponse OAuth(string code)
         {
             var response = new MessageResponse();
 
@@ -191,18 +192,27 @@ namespace Simplistant_API.Controllers
             {
                 response.Status = ResponseStatus.Error;
                 response.Messages.Add("Unexpected response from OAuth server.");
-                return response.Messages.First();
+                return response;
             }
 
-            return json;
-            //var json_obj = JsonDocument.Parse(json)
-            //var access_token = json_obj.RootElement.GetProperty("access_token").ToString();
-            //if (string.IsNullOrWhiteSpace(access_token))
-            //{
-            //    response.Status = ResponseStatus.Error;
-            //    response.Messages.Add("Access token could not be parsed.");
-            //    return response;
-            //}
+            var json_obj = JsonDocument.Parse(json);
+            var id_token = json_obj.RootElement.GetProperty("id_token").ToString();
+            if (string.IsNullOrWhiteSpace(id_token))
+            {
+                response.Status = ResponseStatus.Error;
+                response.Messages.Add("Id token could not be parsed.");
+                return response;
+            }
+
+            var handler = new JsonWebTokenHandler();
+            var jwt = handler.ReadJsonWebToken(id_token);
+            var email = jwt.GetClaim("email");
+
+            var claimsStr = jwt.Claims.Aggregate("", (s, claim) => $"{s}\r\n{claim.Type}|{claim.Value}");
+            response.Messages.Add(claimsStr);
+            response.Messages.Add($"Email? : {email}");
+            return response;
+
 
             //Use access token to get user email
             //Create a user login of type OAuth if it doesn't exist
