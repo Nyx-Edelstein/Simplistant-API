@@ -164,7 +164,7 @@ namespace Simplistant_API.Controllers
 
         [HttpGet]
         //Todo: auth attribute
-        public MessageResponse OAuth(string code)
+        public string OAuth(string code)
         {
             var response = new MessageResponse();
 
