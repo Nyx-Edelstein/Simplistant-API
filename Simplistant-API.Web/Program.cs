@@ -7,6 +7,7 @@ using Simplistant_API.Repository;
 using Simplistant_API.Utility;
 using Simplistant_API.Utility.Interface;
 using System.Net;
+using System.Reflection;
 using System.Text;
 
 namespace Simplistant_API
@@ -20,7 +21,12 @@ namespace Simplistant_API
             //Default boilerplate
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                // using System.Reflection;
+                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+            });
 
             //System repositories
             builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
@@ -66,7 +72,15 @@ namespace Simplistant_API
                         TimeStamp = DateTime.UtcNow
                     };
                     exceptionLogRepository?.Upsert(exceptionLog);
-                    throw;
+
+                    if (e is InvalidOperationException && e.Message.Contains("No authenticationScheme was specified"))
+                    {
+                        context.Response.Clear();
+                        context.Response.ContentType = "text/plain";
+                        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                        await context.Response.WriteAsync("401. This request requires an active session.");
+                    }
+                    else throw;
                 }
             });
 

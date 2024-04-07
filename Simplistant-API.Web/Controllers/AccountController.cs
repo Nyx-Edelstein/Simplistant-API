@@ -51,8 +51,11 @@ namespace Simplistant_API.Controllers
             _userAuthenticator = userAuthenticator;
         }
 
+        /// <summary>
+        /// Register with username and password.
+        /// Generates a login session upon success.
+        /// </summary>
         [HttpPost]
-        //Todo: auth attribute
         public MessageResponse Register(RegisterRequest request)
         {
             var response = new MessageResponse();
@@ -142,7 +145,10 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
-        //Todo: auth attribute
+        /// <summary>
+        /// Login with username and password.
+        /// Generates a login session upon success.
+        /// </summary>
         [HttpPost]
         public MessageResponse Login(LoginRequest request)
         {
@@ -162,6 +168,9 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Begin OAuth login; redirects to Google OAuth2 API endpoint.
+        /// </summary>
         [HttpGet]
         public ActionResult LoginOAuth()
         {
@@ -173,8 +182,11 @@ namespace Simplistant_API.Controllers
             return new RedirectResult(oauth_url, false);
         }
 
+        /// <summary>
+        /// Callback method from Google OAuth2 API endpoint.
+        /// Generates a login session upon success.
+        /// </summary>
         [HttpGet]
-        //Todo: auth attribute
         public MessageResponse OAuth(string code)
         {
             var response = new MessageResponse();
@@ -250,6 +262,9 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Begin password recovery using email address.
+        /// </summary>
         [HttpPost]
         public MessageResponse BeginRecoverAccount(BeginRecoverAccountRequest request)
         {
@@ -278,8 +293,11 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Complete password recovery using email address.
+        /// Generates a login session upon success.
+        /// </summary>
         [HttpPost]
-        //Todo: auth attribute
         public MessageResponse FinishRecoverAccount(FinishRecoverAccountRequest request)
         {
             var response = new MessageResponse();
@@ -331,6 +349,10 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Confirm an email address using a token supplied during the registration process.
+        /// Requires active session.
+        /// </summary>
         [HttpPost]
         [Authorize]
         public MessageResponse ConfirmEmail(ConfirmEmailRequest request)
@@ -364,7 +386,10 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
-        [HttpPost]
+        /// <summary>
+        /// Resend the confirmation email sent during the registration process.
+        /// </summary>
+        [HttpGet]
         [Authorize]
         public MessageResponse ResendConfirmationEmail()
         {
@@ -405,7 +430,11 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
-        [HttpPost]
+        /// <summary>
+        /// Clears the current login session.
+        /// Requires an active session.
+        /// </summary>
+        [HttpGet]
         [Authorize]
         public MessageResponse Logout()
         {
@@ -416,7 +445,11 @@ namespace Simplistant_API.Controllers
             return new MessageResponse();
         }
 
-        [HttpPost]
+        /// <summary>
+        /// Clears all login sessions associated with the account.
+        /// Requires an active session.
+        /// </summary>
+        [HttpGet]
         [Authorize]
         public MessageResponse LogoutAllDevices()
         {
@@ -426,9 +459,13 @@ namespace Simplistant_API.Controllers
             return new MessageResponse();
         }
 
+        /// <summary>
+        /// Change the password for the account.
+        /// The account cannot be an OAuth account.
+        /// Generates an active session upon success.
+        /// </summary>
         [HttpPost]
         [Authorize]
-        //Todo: auth attribute
         public MessageResponse ChangePassword(ChangePasswordRequest request)
         {
             var response = new MessageResponse();
@@ -479,6 +516,10 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Change the recovery email address for the account and send a validation email.
+        /// Requires an active session.
+        /// </summary>
         [HttpPost]
         [Authorize]
         public MessageResponse ChangeEmail(ChangeEmailRequest request)
@@ -549,20 +590,6 @@ namespace Simplistant_API.Controllers
 
             //Success
             return response;
-        }
-
-        [HttpGet]
-        public string DebugClearAllData()
-        {
-            _loginDataRepository.RemoveWhere(x => true);
-            _emailDataRepository.RemoveWhere(x => true);
-            _authDataRepository.RemoveWhere(x => true);
-            _recoveryDataRepository.RemoveWhere(x => true);
-
-            var _exceptionLogRepository = RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System);
-            _exceptionLogRepository.RemoveWhere(x => true);
-
-            return "Databases cleared.";
         }
 
         private static string? ValidateStrongPassword(string password)
