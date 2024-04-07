@@ -193,7 +193,7 @@ namespace Simplistant_API.Controllers
                 response.Messages.Add("Unexpected response from OAuth server.");
                 return response.Messages.First();
             }
-            var json_obj = JsonDocument.Parse(json);
+            var json_obj = JsonDocument.Parse(json).ToString();
             //var access_token = json_obj.RootElement.GetProperty("access_token").ToString();
             //if (string.IsNullOrWhiteSpace(access_token))
             //{
