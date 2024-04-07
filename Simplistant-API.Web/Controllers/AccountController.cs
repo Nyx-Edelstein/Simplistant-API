@@ -191,7 +191,7 @@ namespace Simplistant_API.Controllers
             {
                 response.Status = ResponseStatus.Error;
                 response.Messages.Add("Unexpected response from OAuth server.");
-                return response;
+                return response.Messages.First();
             }
             var json_obj = JsonDocument.Parse(json);
             //var access_token = json_obj.RootElement.GetProperty("access_token").ToString();
@@ -206,7 +206,7 @@ namespace Simplistant_API.Controllers
             //Create a user login of type OAuth if it doesn't exist
             //Create auth ticket
             
-            return json_obj;
+            return json_obj?.ToString();
         }
 
         [HttpPost]
