@@ -156,6 +156,7 @@ namespace Simplistant_API.Controllers
         [HttpGet]
         public ActionResult LoginOAuth()
         {
+            //Redirect to Google OAuth2 API endpoint
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent";
@@ -169,6 +170,7 @@ namespace Simplistant_API.Controllers
         {
             var response = new MessageResponse();
 
+            //Use the code given to request an access token
             const string url = $"https://oauth2.googleapis.com/token";
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
@@ -188,13 +190,16 @@ namespace Simplistant_API.Controllers
             content.Headers.Clear();
             content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
             var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
-            if (string.IsNullOrWhiteSpace(json) || !json.Contains("access_token"))
+
+            //Validate the response
+            if (string.IsNullOrWhiteSpace(json) || !json.Contains("id_token"))
             {
                 response.Status = ResponseStatus.Error;
                 response.Messages.Add("Unexpected response from OAuth server.");
                 return response;
             }
 
+            //Parse out the id_token; this is a jwt
             var json_obj = JsonDocument.Parse(json);
             var id_token = json_obj.RootElement.GetProperty("id_token").ToString();
             if (string.IsNullOrWhiteSpace(id_token))
@@ -204,19 +209,28 @@ namespace Simplistant_API.Controllers
                 return response;
             }
 
+            //Parse the email field from the jwt
             var handler = new JsonWebTokenHandler();
             var jwt = handler.ReadJsonWebToken(id_token);
-            var email = jwt.GetClaim("email");
+            var email = jwt.GetClaim("email").Value;
 
-            var claimsStr = jwt.Claims.Aggregate("", (s, claim) => $"{s}\r\n{claim.Type}|{claim.Value}");
-            response.Messages.Add(claimsStr);
-            response.Messages.Add($"Email? : {email}");
+            //Lookup existing user
+            var loginData = _loginDataRepository.GetWhere(x => x.Username == email).FirstOrDefault();
+            if (loginData == null)
+            {
+                //Create a new user if one doesn't already exist
+                loginData = new LoginData
+                {
+                    Username = email,
+                    LoginType = (int)LoginType.OAuth,
+                };
+                _loginDataRepository.Upsert(loginData);
+            }
+
+            //Success; generate a session
+            //The user is now logged in as if they used username/password
+            _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
             return response;
-
-
-            //Use access token to get user email
-            //Create a user login of type OAuth if it doesn't exist
-            //Create auth ticket
         }
 
         [HttpPost]
@@ -519,7 +533,43 @@ namespace Simplistant_API.Controllers
             //Success
             return response;
         }
-        
+
+        [HttpGet]
+        public MessageResponse GetUserData(string username)
+        {
+            var response = new MessageResponse();
+
+            var loginData = _loginDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
+            if (loginData == null)
+            {
+                response.Messages.Add($"{username} not found");
+                return response;
+            }
+            else
+            {
+                response.Messages.Add($"{username} has an account of type '{(LoginType)loginData.LoginType}'");
+            }
+
+            var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
+            if (emailData != null)
+            {
+                response.Messages.Add($"{username} has a recovery email of '{emailData.RecoveryEmail}'");
+                response.Messages.Add($"{username} email confirmed: {emailData.EmailConfirmed}");
+            }
+
+            var authData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
+            if (authData != null)
+            {
+                response.Messages.Add($"{username} is currently logged in.");
+            }
+            else
+            {
+                response.Messages.Add($"{username} is not logged in.");
+            }
+
+            return response;
+        }
+
         private static string? ValidateStrongPassword(string password)
         {
             var passwordStrength = 0.0;
