@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using Simplistant_API.Data.System;
 using Simplistant_API.Data.Users;
 using Simplistant_API.DTO;
@@ -23,7 +21,6 @@ namespace Simplistant_API.Controllers
     [Route("/[controller]/[action]")]
     public class AccountController : ControllerBase
     {
-        public IRepository<ExceptionLog> _exceptionLogRepository { get; }
         private IRepository<ConfigItem> _configItemRepository { get; }
         private IRepository<LoginData> _loginDataRepository { get; }
         private IRepository<AuthData> _authDataRepository { get; }
@@ -35,7 +32,6 @@ namespace Simplistant_API.Controllers
 
         public AccountController
         (
-            IRepository<ExceptionLog> exceptionLogRepository,
             IRepository<ConfigItem> configItemRepository,
             IRepository<LoginData> loginDataRepository,
             IRepository<AuthData> authDataRepository,
@@ -45,7 +41,6 @@ namespace Simplistant_API.Controllers
             IUserAuthenticator userAuthenticator
         )
         {
-            _exceptionLogRepository = exceptionLogRepository;
             _configItemRepository = configItemRepository;
             _loginDataRepository = loginDataRepository;
             _authDataRepository = authDataRepository;
@@ -158,7 +153,6 @@ namespace Simplistant_API.Controllers
         }
 
         [HttpGet]
-        //Todo: auth attribute
         public ActionResult LoginOAuth()
         {
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
@@ -169,13 +163,19 @@ namespace Simplistant_API.Controllers
         }
 
         [HttpGet]
-        public string OAuth(string code)
+        //Todo: auth attribute
+        public MessageResponse OAuth(string code)
         {
+            var response = new MessageResponse();
+
             const string url = $"https://oauth2.googleapis.com/token";
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var client_secret = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientSecret").FirstOrDefault()?.Value;
             var redirect = $"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}";
-            using var client = new HttpClient();
+            using var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(10)
+            };
             using var content = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("client_id", client_id),
@@ -187,14 +187,26 @@ namespace Simplistant_API.Controllers
             content.Headers.Clear();
             content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
             var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
+            if (string.IsNullOrWhiteSpace(json) || !json.Contains("access_token"))
+            {
+                response.Status = ResponseStatus.Error;
+                response.Messages.Add("Unexpected response from OAuth server.");
+                return response;
+            }
             var json_obj = JsonDocument.Parse(json);
-            var access_token = json_obj.RootElement.GetProperty("access_token").ToString();
+            //var access_token = json_obj.RootElement.GetProperty("access_token").ToString();
+            //if (string.IsNullOrWhiteSpace(access_token))
+            //{
+            //    response.Status = ResponseStatus.Error;
+            //    response.Messages.Add("Access token could not be parsed.");
+            //    return response;
+            //}
 
             //Use access token to get user email
             //Create a user login of type OAuth if it doesn't exist
             //Create auth ticket
-
-            return access_token;
+            
+            return json_obj;
         }
 
         [HttpPost]

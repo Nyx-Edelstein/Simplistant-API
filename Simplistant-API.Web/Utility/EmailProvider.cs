@@ -37,7 +37,8 @@ namespace Simplistant_API.Utility
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false,
-                Credentials = credentials
+                Credentials = credentials,
+                Timeout = 10000
             };
             using var message = new MailMessage(credentials.UserName, email)
             {
