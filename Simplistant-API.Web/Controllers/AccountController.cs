@@ -592,6 +592,15 @@ namespace Simplistant_API.Controllers
             return response;
         }
 
+        /// <summary>
+        /// Check to see if the current user is logged in.
+        /// </summary>
+        [HttpGet]
+        public bool LoggedIn()
+        {
+            return HttpContext.User.Identity?.IsAuthenticated == true;
+        }
+
         private static string? ValidateStrongPassword(string password)
         {
             var passwordStrength = 0.0;
