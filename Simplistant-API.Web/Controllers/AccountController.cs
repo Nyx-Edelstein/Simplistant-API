@@ -92,6 +92,7 @@ namespace Simplistant_API.Controllers
             }
 
             //Ensure username is unique
+            request.Username = request.Username.ToLowerInvariant();
             var existingAccount = _loginDataRepository.GetWhere(x => x.Username == request.Username).FirstOrDefault();
             if (existingAccount != null)
             {
@@ -599,6 +600,20 @@ namespace Simplistant_API.Controllers
         public bool LoggedIn()
         {
             return HttpContext.User.Identity?.IsAuthenticated == true;
+        }
+
+        /// <summary>
+        /// Clear database data for testing purposes.
+        /// </summary>
+        [HttpGet]
+        public bool ClearData()
+        {
+            _loginDataRepository.RemoveWhere(x => true);
+            _emailDataRepository.RemoveWhere(x => true);
+            _authDataRepository.RemoveWhere(x => true);
+            _recoveryDataRepository.RemoveWhere(x => true);
+            RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System).RemoveWhere(x => true);
+            return true;
         }
 
         private static string? ValidateStrongPassword(string password)
