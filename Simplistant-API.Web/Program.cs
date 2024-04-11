@@ -20,7 +20,7 @@ namespace Simplistant_API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //Default boilerplate
+            //Misc boilerplate
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
@@ -29,6 +29,13 @@ namespace Simplistant_API
                 var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             });
+            builder.Services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+            builder.Services.AddCors();
 
             //System repositories
             builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
@@ -42,16 +49,9 @@ namespace Simplistant_API
 
             //Data repositories
 
-            //Misc utilities
+            //Utilities
             builder.Services.AddTransient<IEmailProvider, EmailProvider>();
             builder.Services.AddTransient<IUserAuthenticator, UserAuthenticator>();
-
-            builder.Services.AddAuthorization(options =>
-            {
-                options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-            });
 
             //-----------
             var app = builder.Build();
@@ -106,7 +106,7 @@ namespace Simplistant_API
                 app.UseSwaggerUI();
             //}
 
-            //Https Configuration
+            //Http Configuration
             app.UseHttpsRedirection();
             app.UseCookiePolicy(new CookiePolicyOptions
             {
@@ -114,8 +114,9 @@ namespace Simplistant_API
                 MinimumSameSitePolicy = SameSiteMode.None,
                 Secure = CookieSecurePolicy.Always
             });
+            app.UseCors(options => options.WithOrigins("https://simplistant.azurewebsites.net").AllowAnyMethod());
 
-            //Misc
+            //Misc boilerplate
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseRouting();
