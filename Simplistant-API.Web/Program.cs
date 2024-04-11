@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.CookiePolicy;
-using Simplistant_API.Data.System;
-using Simplistant_API.Data.Users;
 using Simplistant_API.Extensions;
 using Simplistant_API.Repository;
 using Simplistant_API.Utility;
@@ -9,6 +7,10 @@ using Simplistant_API.Utility.Interface;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using Newtonsoft.Json;
+using Simplistant_API.DTO;
+using Simplistant_API.Models.System;
+using Simplistant_API.Models.Users;
 
 namespace Simplistant_API
 {
@@ -76,9 +78,14 @@ namespace Simplistant_API
                     if (e is InvalidOperationException && e.Message.Contains("No authenticationScheme was specified"))
                     {
                         context.Response.Clear();
-                        context.Response.ContentType = "text/plain";
+                        context.Response.ContentType = "application/json";
                         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                        await context.Response.WriteAsync("401. This request requires an active session.");
+                        var message = new MessageResponse
+                        {
+                            Status = ResponseStatus.RequiresAuth
+                        };
+                        var json = JsonConvert.SerializeObject(message);
+                        await context.Response.WriteAsync(json);
                     }
                     else throw;
                 }

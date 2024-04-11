@@ -1,6 +1,6 @@
 ﻿using Simplistant_API.Repository;
 
-namespace Simplistant_API.Data.System
+namespace Simplistant_API.Models.System
 {
     [HasStringKey("Key", isUnique: true)]
     public class ConfigItem : DataItem

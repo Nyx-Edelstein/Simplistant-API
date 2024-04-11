@@ -1,10 +1,10 @@
 ﻿using System.Net;
-using Simplistant_API.Data.System;
 using Simplistant_API.Repository;
 using Simplistant_API.Utility.Interface;
 using System.Net.Mail;
 using System.Text;
 using Simplistant_API.Extensions;
+using Simplistant_API.Models.System;
 
 namespace Simplistant_API.Utility
 {

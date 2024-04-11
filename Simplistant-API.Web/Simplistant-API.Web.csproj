@@ -24,7 +24,6 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.5.1" />
-    <PackageReference Include="MTT" Version="0.7.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
@@ -33,10 +32,5 @@
     <ProjectReference Include="..\Simplistant-API.Models\Simplistant-API.Models.csproj" />
     <ProjectReference Include="..\Simplistant-API.Repository\Simplistant-API.Repository.csproj" />
   </ItemGroup>
-
-	<!-- Uncomment this and build to generate javascript objects from the API data transfer objects -->
-	<!--<Target Name="Convert" BeforeTargets="PrepareForBuild">
-		<ConvertMain WorkingDirectory="DTO\" ConvertDirectory="..\..\Simplistant\Models\"/>
-	</Target>-->
 
 </Project>

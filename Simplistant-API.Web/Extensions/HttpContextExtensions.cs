@@ -1,4 +1,4 @@
-﻿using Simplistant_API.Data.Users;
+﻿using Simplistant_API.Models.Users;
 
 namespace Simplistant_API.Extensions
 {

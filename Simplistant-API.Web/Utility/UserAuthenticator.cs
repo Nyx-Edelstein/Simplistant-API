@@ -1,7 +1,7 @@
-﻿using Simplistant_API.Data.Users;
-using Simplistant_API.Utility.Interface;
+﻿using Simplistant_API.Utility.Interface;
 using System.Security.Claims;
 using Simplistant_API.Extensions;
+using Simplistant_API.Models.Users;
 using Simplistant_API.Repository;
 
 using static BCrypt.Net.BCrypt;

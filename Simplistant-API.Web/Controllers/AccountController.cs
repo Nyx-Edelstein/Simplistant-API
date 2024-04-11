@@ -4,11 +4,12 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Simplistant_API.Data.System;
-using Simplistant_API.Data.Users;
+using Simplistant_API.Attributes;
 using Simplistant_API.DTO;
 using Simplistant_API.DTO.Account;
 using Simplistant_API.Extensions;
+using Simplistant_API.Models.System;
+using Simplistant_API.Models.Users;
 using Simplistant_API.Repository;
 using Simplistant_API.Utility.Interface;
 
@@ -170,17 +171,17 @@ namespace Simplistant_API.Controllers
         }
 
         /// <summary>
-        /// Begin OAuth login; redirects to Google OAuth2 API endpoint.
+        /// Begin OAuth login; returuns redirect URL to Google OAuth2 API endpoint.
         /// </summary>
         [HttpGet]
-        public ActionResult LoginOAuth()
+        public string LoginOAuth()
         {
             //Redirect to Google OAuth2 API endpoint
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent";
 
-            return new RedirectResult(oauth_url, false);
+            return oauth_url;
         }
 
         /// <summary>
