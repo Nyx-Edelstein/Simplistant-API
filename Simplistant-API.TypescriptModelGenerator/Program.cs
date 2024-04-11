@@ -123,20 +123,26 @@ namespace Simplistant_API.TypescriptModelGenerator
         {
             var actionName = action.Name;
             var parameters = action.GetParameters();
-            var parameterTypes = parameters.Length == 0
-                ? ""
-                : string.Join(",", parameters.Select(x => x.ParameterType.Name).ToList());
+            var parameterString = parameters.Length == 1
+                ? $"{parameters[0].Name}: {ToTSType(parameters[0].ParameterType.Name)}"
+                : "";
             var actionHttpType = action.GetCustomAttribute<HttpGetAttribute>() != null
                 ? "get"
                 : "post";
+            var post_data = parameters.Length == 1 && actionHttpType == "post"
+                ? $", {parameters[0].Name}"
+                : "";
+            var get_params = parameters.Length == 1 && actionHttpType == "get"
+                ? $"?code=${{{parameters[0].Name}}}"
+                : "";
             var actionReturnType = ToTSType(action.ReturnType.Name);
 
-            return $@"export const {actionName} = async ({parameterTypes}) => {{
-    const endpoint = `${{api_uri}}/{controllerName}/{actionName}`;
-    return await axios.{actionHttpType}<{actionReturnType}>(endpoint)
+            return $@"export const {actionName} = async ({parameterString}) => {{
+    const endpoint = `${{api_uri}}/{controllerName}/{actionName}{get_params}`;
+    return await axios.{actionHttpType}<{actionReturnType}>(endpoint{post_data})
         .then(response => {{ return response.data }})
         .catch((axiosError: AxiosError) => {{
-            if (axiosError.response!.status == 401) {{
+            if (axiosError.response!.status === 401) {{
                 return 0;
             }} else {{
                 return axiosError.message;
