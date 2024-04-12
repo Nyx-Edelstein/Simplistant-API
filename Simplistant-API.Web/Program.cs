@@ -6,7 +6,6 @@ using Simplistant_API.Utility;
 using Simplistant_API.Utility.Interface;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using Newtonsoft.Json;
 using Simplistant_API.DTO;
 using Simplistant_API.Models.System;

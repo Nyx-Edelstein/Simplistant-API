@@ -189,7 +189,7 @@ namespace Simplistant_API.Controllers
         /// Generates a login session upon success.
         /// </summary>
         [HttpGet]
-        public MessageResponse OAuth(string code)
+        public MessageResponse OAuth(string code, string callback = "")
         {
             var response = new MessageResponse();
 
@@ -261,6 +261,8 @@ namespace Simplistant_API.Controllers
 
             //Success
             _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
+            if (!string.IsNullOrWhiteSpace(callback))
+                HttpContext.Response.Redirect(callback);
             return response;
         }
 

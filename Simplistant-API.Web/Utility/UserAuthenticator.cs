@@ -34,7 +34,7 @@ namespace Simplistant_API.Utility
             };
             _authDataRepository.Upsert(secureAuthData);
 
-            //Set cookie
+            //Set auth cookie
             context.SetIdentity(authData);
         }
 
