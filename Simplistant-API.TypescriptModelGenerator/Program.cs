@@ -123,17 +123,15 @@ namespace Simplistant_API.TypescriptModelGenerator
         {
             var actionName = action.Name;
             var parameters = action.GetParameters();
-            var parameterString = parameters.Length == 1
-                ? $"{parameters[0].Name}: {ToTSType(parameters[0].ParameterType.Name)}"
-                : "";
+            var parameterString = string.Join(", ", parameters.Select(ToTSParameter).ToList());
             var actionHttpType = action.GetCustomAttribute<HttpGetAttribute>() != null
                 ? "get"
                 : "post";
-            var post_data = parameters.Length == 1 && actionHttpType == "post"
+            var post_data = actionHttpType == "post" && parameters.Length == 1
                 ? $", {parameters[0].Name}"
                 : "";
-            var get_params = parameters.Length == 1 && actionHttpType == "get"
-                ? $"?code=${{{parameters[0].Name}}}"
+            var get_params = actionHttpType == "get" && parameters.Length > 0
+                ? "?" + string.Join("&", parameters.Select(x => $"{x.Name}=${{{x.Name}}}").ToList())
                 : "";
             var actionReturnType = ToTSType(action.ReturnType.Name);
 
@@ -151,12 +149,14 @@ namespace Simplistant_API.TypescriptModelGenerator
 }}";
         }
 
-        private static object ToTSType(string returnTypeName) => returnTypeName switch
+        private static string ToTSParameter(ParameterInfo parameter) => $"{parameter.Name}: {ToTSType(parameter.ParameterType.Name)}";
+
+        private static string ToTSType(string typeName) => typeName switch
         {
             "String" => "string",
             "Int32" => "number",
             "Boolean" => "boolean",
-            _ => $"DTO.{returnTypeName}"
+            _ => $"DTO.{typeName}"
         };
     }
 }
