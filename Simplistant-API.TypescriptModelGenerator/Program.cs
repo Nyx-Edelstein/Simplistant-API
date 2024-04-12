@@ -94,7 +94,7 @@ namespace Simplistant_API.TypescriptModelGenerator
                 .Where(x => x.IsClass && x.GetCustomAttribute<ApiControllerAttribute>() != null)
                 .Select(x => new
                 {
-                    x.Name,
+                    Name = x.Name.Replace("Controller", ""),
                     Methods = x.GetMethods()
                         .Where(x => x.GetCustomAttribute<API_IgnoreAttribute>() == null
                             && (x.GetCustomAttribute<HttpGetAttribute>() != null 
