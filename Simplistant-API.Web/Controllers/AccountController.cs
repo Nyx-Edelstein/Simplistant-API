@@ -249,26 +249,28 @@ namespace Simplistant_API.Controllers
             //Lookup existing user by recovery email
             //(They may already have an account with this email address)
             var emailData = _emailDataRepository.GetWhere(x => x.RecoveryEmail == email).FirstOrDefault();
-            if (emailData != null)
+            if (emailData == null)
+            {
+                //Create new login data if it doesn't already exist
+                var loginData = _loginDataRepository.GetWhere(x => x.Username == email).FirstOrDefault();
+                if (loginData == null)
+                {
+                    loginData = new LoginData
+                    {
+                        Username = email,
+                        LoginType = (int)LoginType.OAuth,
+                    };
+                    _loginDataRepository.Upsert(loginData);
+                }
+
+                //Success
+                _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
+            }
+            else
             {
                 //Proceed with login as if they used username/password
                 _userAuthenticator.GenerateSession(HttpContext, emailData.Username);
             }
-
-            //Otherwise, create new login data if it doesn't already exist
-            var loginData = _loginDataRepository.GetWhere(x => x.Username == email).FirstOrDefault();
-            if (loginData == null)
-            {
-                loginData = new LoginData
-                {
-                    Username = email,
-                    LoginType = (int)LoginType.OAuth,
-                };
-                _loginDataRepository.Upsert(loginData);
-            }
-
-            //Success
-            _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
 
             return response.status == ResponseStatus.Success
                 ? new RedirectResult("https://simplistant.azurewebsites.net", false)
