@@ -113,7 +113,9 @@ namespace Simplistant_API.TypescriptModelGenerator
             var file_data = "//Auto-generated client-side API functions\r\n"
                 + "import axios, { AxiosError } from \"axios\"\r\n"
                 + "import * as DTO from \"./dto\";\r\n\r\n"
-                + "const api_uri = \"https://simplistant-api.azurewebsites.net\";\r\n\r\n"
+                + "const api_uri = \"https://simplistant-api.azurewebsites.net\";\r\n"
+                + "const config: Object = { withCredentials: true };\r\n"
+                + "const axiosInstance = axios.create(config);\r\n\r\n"
                 + string.Join("\r\n\r\n", api_funcs);
 
             File.WriteAllText(API_OUTPUT_FILE, file_data);
@@ -133,11 +135,10 @@ namespace Simplistant_API.TypescriptModelGenerator
             var get_params = actionHttpType == "get" && parameters.Length > 0
                 ? "?" + string.Join("&", parameters.Select(x => $"{x.Name}=${{{x.Name}}}").ToList())
                 : "";
-            var actionReturnType = ToTSType(action.ReturnType.Name);
 
             return $@"export const {actionName} = async ({parameterString}) => {{
     const endpoint = `${{api_uri}}/{controllerName}/{actionName}{get_params}`;
-    return await axios.{actionHttpType}<{actionReturnType}>(endpoint{post_data})
+    return await axiosInstance.{actionHttpType}(endpoint{post_data})
         .then(response => {{ return response.data }})
         .catch((axiosError: AxiosError) => {{
             if (axiosError.response!.status === 401) {{
