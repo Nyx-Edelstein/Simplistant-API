@@ -192,7 +192,7 @@ namespace Simplistant_API.Controllers
         /// </summary>
         [HttpGet]
         [GeneratorIgnore]
-        public ActionResult OAuth(string code, string callback = "")
+        public ActionResult OAuth(string code)
         {
             var response = new MessageResponse();
 
@@ -261,12 +261,10 @@ namespace Simplistant_API.Controllers
 
             //Success
             _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
-            if (!string.IsNullOrWhiteSpace(callback))
-                HttpContext.Response.Redirect(callback);
 
             return response.Status == ResponseStatus.Success
-                ? Content(@"<script>window.close();</script>", "text/html")
-                : Content($"{JsonConvert.SerializeObject(response)}", "text/javascript");
+                ? new RedirectResult("https://simplistant.azurewebsites.net", false)
+                : Content($"{JsonConvert.SerializeObject(response)}", "application/json");
         }
 
         /// <summary>
