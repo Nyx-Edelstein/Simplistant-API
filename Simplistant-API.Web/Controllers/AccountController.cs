@@ -65,6 +65,10 @@ namespace Simplistant_API.Controllers
             //Validate request data
             if (string.IsNullOrWhiteSpace(request.Username))
                 response.messages.Add("Username is required.");
+            else if (request.Username.Length < 2)
+            {
+                response.messages.Add("Username must be at least 2 characters.");
+            }
             else if (!request.Username.All(c => char.IsAsciiLetterOrDigit(c) || c == '_'))
                 response.messages.Add("Username must contain only alphanumeric characters and underscores.");
             else if (!char.IsAsciiLetter(request.Username[0]))
