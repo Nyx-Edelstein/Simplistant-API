@@ -617,6 +617,15 @@ namespace Simplistant_API.Controllers
         }
 
         /// <summary>
+        /// Check to see if the current user is logged in.
+        /// </summary>
+        [HttpGet]
+        public string GetCurrentUser()
+        {
+            return HttpContext.GetCurrentUser();
+        }
+
+        /// <summary>
         /// Clear database data for testing purposes.
         /// </summary>
         [HttpGet]
