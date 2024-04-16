@@ -73,7 +73,7 @@ namespace Simplistant_API.Controllers
 
             if (request.Email != null && !(new EmailAddressAttribute().IsValid(request.Email)))
                 response.Messages.Add("Provided email address is not a valid format.");
-            else if (request.Email == null && request.WaiveEmailRecovery is null or false)
+            else if (request.Email == null && !request.WaiveEmailRecovery)
                 response.Messages.Add("No recovery email is specified and the account cannot be recovered if the password is lost. Please confirm this is intentional.");
 
             if (response.Messages.Any())

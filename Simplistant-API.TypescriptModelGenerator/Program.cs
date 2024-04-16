@@ -74,9 +74,9 @@ namespace Simplistant_API.TypescriptModelGenerator
             var genericType = genericTypeArguments[0];
             return propTypeName switch
             {
-                "Nullable`1" => genericType.Name == "String" ? "string"
-                    : genericType.Name == "Int32" ? "number"
-                    : genericType.Name == "Boolean" ? "boolean"
+                "Nullable`1" => genericType.Name == "String" ? "string | undefined"
+                    : genericType.Name == "Int32" ? "number | undefined"
+                    : genericType.Name == "Boolean" ? "boolean | undefined"
                     : "any",
                 "List`1" => genericType.Name == "String" ? "string[]"
                     : genericType.Name == "Int32" ? "number[]"
