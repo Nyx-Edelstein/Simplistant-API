@@ -93,17 +93,18 @@ namespace Simplistant_API
             //User auth
             app.Use(async (context, next) =>
             {
+                var userAuthenticator = app.Services.GetService<IUserAuthenticator>();
+                var authenticated = userAuthenticator.Authenticate(context);
+
                 var exceptionLogRepository = app.Services.GetService<IRepository<ExceptionLog>>();
                 var exceptionLog = new ExceptionLog
                 {
                     ExceptionType = "Info",
-                    Message = @$"{context.Connection.RemoteIpAddress} | {string.Join("\r\n", context.Request.Cookies.Select(x => $"{x.Key}: {x.Value}").ToList())}",
+                    Message = @$"{context.Connection.RemoteIpAddress} - {authenticated} | {string.Join("\r\n", context.Request.Cookies.Select(x => $"{x.Key}: {x.Value}").ToList())}",
                     TimeStamp = DateTime.UtcNow
                 };
                 exceptionLogRepository?.Upsert(exceptionLog);
 
-                var userAuthenticator = app.Services.GetService<IUserAuthenticator>();
-                userAuthenticator.Authenticate(context);
                 await next();
             });
 
