@@ -614,7 +614,7 @@ namespace Simplistant_API.Controllers
             };
             exceptionLogRepository?.Upsert(exceptionLog);
 
-            return HttpContext.User.Identity?.IsAuthenticated == true;
+            return result;
         }
 
         /// <summary>
