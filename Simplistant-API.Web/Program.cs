@@ -34,7 +34,16 @@ namespace Simplistant_API
                     .RequireAuthenticatedUser()
                     .Build();
             });
-            builder.Services.AddCors();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("frontend", builder =>
+                {
+                    builder.WithOrigins("https://simplistant.azurewebsites.net")
+                        .AllowCredentials()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
 
             //System repositories
             builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
@@ -115,10 +124,7 @@ namespace Simplistant_API
                 Secure = CookieSecurePolicy.Always
             });
 
-            app.UseCors(options => options.WithOrigins("https://simplistant.azurewebsites.net")
-                .AllowAnyHeader()
-                .AllowCredentials()
-                .AllowAnyMethod());
+            app.UseCors("frontend");
 
             //Misc boilerplate
             app.UseDefaultFiles();
