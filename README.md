@@ -1,1 +1,1 @@
-API for (Simplistant)[https://simplistant.azurewebsites.net].
+API for [Simplistant](https://simplistant.azurewebsites.net).
