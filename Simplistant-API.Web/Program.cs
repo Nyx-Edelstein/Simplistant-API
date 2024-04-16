@@ -113,10 +113,11 @@ namespace Simplistant_API
                 MinimumSameSitePolicy = SameSiteMode.None,
                 Secure = CookieSecurePolicy.Always
             });
-            //app.UseCors(options => options.WithOrigins("https://simplistant.azurewebsites.net").AllowAnyMethod());
-            app.UseCors(options => options.AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader());
+
+            app.UseCors(options => options.WithOrigins("https://simplistant.azurewebsites.net")
+                .AllowAnyHeader()
+                .AllowCredentials()
+                .AllowAnyMethod());
 
             //Misc boilerplate
             app.UseDefaultFiles();
