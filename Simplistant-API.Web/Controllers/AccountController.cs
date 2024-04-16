@@ -131,7 +131,7 @@ namespace Simplistant_API.Controllers
 
             //Success; generate auth data and store securely
             _userAuthenticator.GenerateSession(HttpContext, request.Username);
-            if (request.Email == null) return response;
+            if (string.IsNullOrWhiteSpace(request.Email)) return response;
 
             //If email is provided, send a confirmation email and store data securely
             var confirmationToken = GenerateSalt();
