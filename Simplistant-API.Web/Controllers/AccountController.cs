@@ -64,23 +64,27 @@ namespace Simplistant_API.Controllers
 
             //Validate request data
             if (string.IsNullOrWhiteSpace(request.Username))
-                response.Messages.Add("Username is required.");
+                response.messages.Add("Username is required.");
             else if (!request.Username.All(c => char.IsAsciiLetterOrDigit(c) || c == '_'))
-                response.Messages.Add("Username must contain only alphanumeric characters and underscores.");
+                response.messages.Add("Username must contain only alphanumeric characters and underscores.");
             else if (!char.IsAsciiLetter(request.Username[0]))
-                response.Messages.Add("Username must begin with a letter.");
+                response.messages.Add("Username must begin with a letter.");
 
             if (string.IsNullOrWhiteSpace(request.Password))
-                response.Messages.Add("Password is required.");
+                response.messages.Add("Password is required.");
 
-            if (request.Email != null && !(new EmailAddressAttribute().IsValid(request.Email)))
-                response.Messages.Add("Provided email address is not a valid format.");
-            else if (request.Email == null && !request.WaiveEmailRecovery)
-                response.Messages.Add("No recovery email is specified and the account cannot be recovered if the password is lost. Please confirm this is intentional.");
-
-            if (response.Messages.Any())
+            if (!request.WaiveEmailRecovery)
             {
-                response.Status = ResponseStatus.Error;
+                var emailValid = new EmailAddressAttribute().IsValid(request.Email);
+                if (!emailValid)
+                    response.messages.Add("Provided email address is not a valid format.");
+                else if (string.IsNullOrWhiteSpace(request.Email))
+                    response.messages.Add("No recovery email is specified and the account cannot be recovered if the password is lost. Please confirm this is intentional.");
+            }
+
+            if (response.messages.Any())
+            {
+                response.status = ResponseStatus.Error;
                 return response;
             }
 
@@ -88,8 +92,8 @@ namespace Simplistant_API.Controllers
             var passwordValidationError = ValidateStrongPassword(request.Password);
             if (passwordValidationError != null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add(passwordValidationError);
+                response.status = ResponseStatus.Error;
+                response.messages.Add(passwordValidationError);
                 return response;
             }
 
@@ -98,8 +102,8 @@ namespace Simplistant_API.Controllers
             var existingAccount = _loginDataRepository.GetWhere(x => x.Username == request.Username).FirstOrDefault();
             if (existingAccount != null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add($"Username '{request.Username}' is taken.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add($"Username '{request.Username}' is taken.");
                 return response;
             }
 
@@ -107,8 +111,8 @@ namespace Simplistant_API.Controllers
             var existingOAuthAccount = _loginDataRepository.GetWhere(x => x.Username == request.Email).FirstOrDefault();
             if (existingOAuthAccount != null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add($"Email address '{request.Email}' is in use by an OAuth account. Try signing in with Google instead.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add($"Email address '{request.Email}' is in use by an OAuth account. Try signing in with Google instead.");
                 return response;
             }
 
@@ -130,12 +134,12 @@ namespace Simplistant_API.Controllers
             var success = _emailProvider.SendConfirmationEmail(request.Username, request.Email, confirmationToken);
             if (success)
             {
-                response.Messages.Add($"Follow instructions sent to '{request.Email}' in order to enable recovery of your account. You may need to check your spam folder.");
+                response.messages.Add($"Follow instructions sent to '{request.Email}' in order to enable recovery of your account. You may need to check your spam folder.");
             }
             else
             {
-                response.Status = ResponseStatus.Warning;
-                response.Messages.Add("There was a problem sending the confirmation email to the specified address. Please retry later.");
+                response.status = ResponseStatus.Warning;
+                response.messages.Add("There was a problem sending the confirmation email to the specified address. Please retry later.");
             }
             var emailData = new EmailData
             {
@@ -161,8 +165,8 @@ namespace Simplistant_API.Controllers
             var loginData = _loginDataRepository.GetWhere(x => x.Username == request.Username).FirstOrDefault();
             if (loginData == null || !Verify(request.Password, loginData.HashedSecret))
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Username or password is invalid.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Username or password is invalid.");
                 return response;
             }
 
@@ -220,8 +224,8 @@ namespace Simplistant_API.Controllers
             //Validate the response
             if (string.IsNullOrWhiteSpace(json) || !json.Contains("id_token"))
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Unexpected response from OAuth server. Please contact the site administrator.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Unexpected response from OAuth server. Please contact the site administrator.");
             }
 
             //Parse out the id_token; this is a jwt
@@ -229,8 +233,8 @@ namespace Simplistant_API.Controllers
             var id_token = json_obj.RootElement.GetProperty("id_token").ToString();
             if (string.IsNullOrWhiteSpace(id_token))
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Id token could not be parsed. Please contact the site administrator.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Id token could not be parsed. Please contact the site administrator.");
             }
 
             //Parse the email field from the jwt
@@ -262,7 +266,7 @@ namespace Simplistant_API.Controllers
             //Success
             _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
 
-            return response.Status == ResponseStatus.Success
+            return response.status == ResponseStatus.Success
                 ? new RedirectResult("https://simplistant.azurewebsites.net", false)
                 : Content($"{JsonConvert.SerializeObject(response)}", "application/json");
         }
@@ -294,7 +298,7 @@ namespace Simplistant_API.Controllers
 
             //"Success" in any case -- do not reveal data unnecessarily
             var response = new MessageResponse();
-            response.Messages.Add("If the provided information is on record, a recovery email has been sent. You may need to check your spam folder.");
+            response.messages.Add("If the provided information is on record, a recovery email has been sent. You may need to check your spam folder.");
             return response;
         }
 
@@ -311,14 +315,14 @@ namespace Simplistant_API.Controllers
             var loginData = _loginDataRepository.GetWhere(x => x.Username == request.Username).FirstOrDefault();
             if (loginData == null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Username or recovery code is invalid.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Username or recovery code is invalid.");
                 return response;
             }
             if (loginData.LoginType != (int)LoginType.UsernamePassword)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("This is an OAuth account. Use OAuth login instead.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("This is an OAuth account. Use OAuth login instead.");
                 return response;
             }
 
@@ -326,8 +330,8 @@ namespace Simplistant_API.Controllers
             var recoveryData = _recoveryDataRepository.GetWhere(x => x.Username == request.Username).FirstOrDefault();
             if (recoveryData == null || !Verify(request.RecoveryToken, recoveryData.RecoveryToken))
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Username or recovery code is invalid.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Username or recovery code is invalid.");
                 return response;
             }
 
@@ -335,8 +339,8 @@ namespace Simplistant_API.Controllers
             var passwordValidationError = ValidateStrongPassword(request.Password);
             if (passwordValidationError != null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add(passwordValidationError);
+                response.status = ResponseStatus.Error;
+                response.messages.Add(passwordValidationError);
                 return response;
             }
 
@@ -350,7 +354,7 @@ namespace Simplistant_API.Controllers
 
             //Success
             _userAuthenticator.GenerateSession(HttpContext, request.Username);
-            response.Messages.Add("Password has been updated.");
+            response.messages.Add("Password has been updated.");
             return response;
         }
 
@@ -369,8 +373,8 @@ namespace Simplistant_API.Controllers
             var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
             if (emailData == null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("No recovery email on record.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("No recovery email on record.");
                 return response;
             }
             
@@ -378,8 +382,8 @@ namespace Simplistant_API.Controllers
             var tokenIsValid = Verify(request.ConfirmationToken, emailData.ConfirmationToken);
             if (!tokenIsValid)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("The confirmation code could not be verified. Try resending the confirmation email.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("The confirmation code could not be verified. Try resending the confirmation email.");
                 return response;
             }
 
@@ -387,7 +391,7 @@ namespace Simplistant_API.Controllers
             emailData.ConfirmationToken = null;
             emailData.EmailConfirmed = true;
             _emailDataRepository.Upsert(emailData);
-            response.Messages.Add("Recovery email has been confirmed.");
+            response.messages.Add("Recovery email has been confirmed.");
             return response;
         }
 
@@ -405,14 +409,14 @@ namespace Simplistant_API.Controllers
             var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
             if (emailData == null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("No recovery email is on record for this account.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("No recovery email is on record for this account.");
                 return response;
             }
             if (emailData.EmailConfirmed)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("This email address has already been confirmed.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("This email address has already been confirmed.");
                 return response;
             }
 
@@ -425,13 +429,13 @@ namespace Simplistant_API.Controllers
             var success = _emailProvider.SendConfirmationEmail(username, emailData.RecoveryEmail, confirmationToken);
             if (!success)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("There was a problem sending the confirmation email. Try again later.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("There was a problem sending the confirmation email. Try again later.");
                 return response;
             }
 
             //Success
-            response.Messages.Add("A confirmation email has been sent. You may need to check your spam folder.");
+            response.messages.Add("A confirmation email has been sent. You may need to check your spam folder.");
             return response;
         }
 
@@ -480,22 +484,22 @@ namespace Simplistant_API.Controllers
             var loginData = _loginDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
             if (loginData == null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("User account error. Contact site admin if the problem persists.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("User account error. Contact site admin if the problem persists.");
                 return response;
             }
             if (loginData.LoginType != (int)LoginType.UsernamePassword)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("This is an OAuth account. Use OAuth login instead.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("This is an OAuth account. Use OAuth login instead.");
                 return response;
             }
 
             //Verify old password
             if (!Verify(request.OldPassword, loginData.HashedSecret))
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Password is invalid.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Password is invalid.");
                 return response;
             }
 
@@ -503,8 +507,8 @@ namespace Simplistant_API.Controllers
             var passwordValidationError = ValidateStrongPassword(request.NewPassword);
             if (passwordValidationError != null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add(passwordValidationError);
+                response.status = ResponseStatus.Error;
+                response.messages.Add(passwordValidationError);
                 return response;
             }
 
@@ -517,7 +521,7 @@ namespace Simplistant_API.Controllers
 
             //Success; generate and store new auth data
             _userAuthenticator.GenerateSession(HttpContext, username);
-            response.Messages.Add("Password updated successfully.");
+            response.messages.Add("Password updated successfully.");
             return response;
         }
 
@@ -536,22 +540,22 @@ namespace Simplistant_API.Controllers
             var loginData = _loginDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
             if (loginData == null)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("User account error. Contact site administrator if the problem persists.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("User account error. Contact site administrator if the problem persists.");
                 return response;
             }
             if (loginData.LoginType != (int)LoginType.UsernamePassword)
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("This is an OAuth account. Use OAuth login instead.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("This is an OAuth account. Use OAuth login instead.");
                 return response;
             }
 
             //Validate email
             if (!new EmailAddressAttribute().IsValid(request.Email))
             {
-                response.Status = ResponseStatus.Error;
-                response.Messages.Add("Provided email address is not a correct format.");
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Provided email address is not a correct format.");
                 return response;
             }
 
@@ -585,12 +589,12 @@ namespace Simplistant_API.Controllers
             var success = _emailProvider.SendConfirmationEmail(username, request.Email, confirmationToken);
             if (success)
             {
-                response.Messages.Add($"Follow instructions sent to '{request.Email}' to confirm the new address. You may need to check your spam folder.");
+                response.messages.Add($"Follow instructions sent to '{request.Email}' to confirm the new address. You may need to check your spam folder.");
             }
             else
             {
-                response.Status = ResponseStatus.Warning;
-                response.Messages.Add("There was a problem sending the confirmation email to the specified address. Please retry later.");
+                response.status = ResponseStatus.Warning;
+                response.messages.Add("There was a problem sending the confirmation email to the specified address. Please retry later.");
             }
 
             //Success

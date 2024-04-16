@@ -2,7 +2,7 @@
 {
     public class MessageResponse
     {
-        public ResponseStatus Status { get; set; } = ResponseStatus.Success;
-        public List<string> Messages { get; } = new();
+        public ResponseStatus status { get; set; } = ResponseStatus.Success;
+        public List<string> messages { get; } = new();
     }
 }

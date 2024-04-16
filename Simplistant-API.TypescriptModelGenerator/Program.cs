@@ -146,11 +146,15 @@ axiosInstance.interceptors.response.use(
             var get_params = actionHttpType == "get" && parameters.Length > 0
                 ? "?" + string.Join("&", parameters.Select(x => $"{x.Name}=${{{x.Name}}}").ToList())
                 : "";
+            var actionReturnType = ToTSType(action.ReturnType.Name);
 
-            return $@"export const {actionName} = async ({parameterString}) => {{
+            return $@"export const {actionName} = async ({parameterString}): Promise<0 | string | {actionReturnType}> => {{
     const endpoint = `${{api_uri}}/{controllerName}/{actionName}{get_params}`;
-    return await axiosInstance.{actionHttpType}(endpoint{post_data})
-        .then(response => {{ return response.data }})
+    return await axiosInstance.{actionHttpType}<{actionReturnType}>(endpoint{post_data})
+        .then(response => {{
+            console.log(response);
+            return response.data;
+        }})
         .catch((axiosError: AxiosError) => {{
             if (axiosError.response!.status === 401) {{
                 return 0;

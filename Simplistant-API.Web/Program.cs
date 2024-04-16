@@ -81,7 +81,7 @@ namespace Simplistant_API
                         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                         var message = new MessageResponse
                         {
-                            Status = ResponseStatus.RequiresAuth
+                            status = ResponseStatus.RequiresAuth
                         };
                         var json = JsonConvert.SerializeObject(message);
                         await context.Response.WriteAsync(json);
