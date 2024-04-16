@@ -603,18 +603,7 @@ namespace Simplistant_API.Controllers
         [HttpGet]
         public bool LoggedIn()
         {
-            var result = HttpContext.User.Identity?.IsAuthenticated == true;
-
-            var exceptionLogRepository = RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System);
-            var exceptionLog = new ExceptionLog
-            {
-                ExceptionType = "Info",
-                Message = @$"{HttpContext.Connection.RemoteIpAddress} - {result} | {string.Join("\r\n", HttpContext.Request.Cookies.Select(x => $"{x.Key}: {x.Value}").ToList())}",
-                TimeStamp = DateTime.UtcNow
-            };
-            exceptionLogRepository?.Upsert(exceptionLog);
-
-            return result;
+            return HttpContext.User.Identity?.IsAuthenticated == true;
         }
 
         /// <summary>
