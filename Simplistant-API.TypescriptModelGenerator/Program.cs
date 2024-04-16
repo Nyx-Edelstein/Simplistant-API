@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
+using Simplistant_API.Attributes;
 using Simplistant_API.Controllers;
 using Simplistant_API.DTO;
 
@@ -13,7 +14,7 @@ namespace Simplistant_API.TypescriptModelGenerator
             GenerateAPIDefinitions();
         }
 
-        private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/API/dto.d.ts"; 
+        private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/API/dto.tsx"; 
         private static void GenerateTypeDefinitions()
         {
             var enums = typeof(ResponseStatus).Assembly.GetTypes()
@@ -95,6 +96,7 @@ namespace Simplistant_API.TypescriptModelGenerator
                 {
                     Name = x.Name.Replace("Controller", ""),
                     Methods = x.GetMethods()
+                        .Where(y => y.GetCustomAttribute<GeneratorIgnoreAttribute>() == null)
                         .Where( y => y.GetCustomAttribute<HttpGetAttribute>() != null 
                                 || y.GetCustomAttribute<HttpPostAttribute>() != null)
                         .OrderBy(y => y.Name)

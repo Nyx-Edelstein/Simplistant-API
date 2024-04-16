@@ -4,6 +4,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
+using Newtonsoft.Json;
+using Simplistant_API.Attributes;
 using Simplistant_API.DTO;
 using Simplistant_API.DTO.Account;
 using Simplistant_API.Extensions;
@@ -173,14 +175,15 @@ namespace Simplistant_API.Controllers
         /// Begin OAuth login; returuns redirect URL to Google OAuth2 API endpoint.
         /// </summary>
         [HttpGet]
-        public string LoginOAuth()
+        [GeneratorIgnore]
+        public ActionResult LoginOAuth()
         {
             //Redirect to Google OAuth2 API endpoint
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
             var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent";
 
-            return oauth_url;
+            return new RedirectResult(oauth_url, false);
         }
 
         /// <summary>
@@ -188,7 +191,8 @@ namespace Simplistant_API.Controllers
         /// Generates a login session upon success.
         /// </summary>
         [HttpGet]
-        public MessageResponse OAuth(string code, string callback = "")
+        [GeneratorIgnore]
+        public ActionResult OAuth(string code, string callback = "")
         {
             var response = new MessageResponse();
 
@@ -217,8 +221,7 @@ namespace Simplistant_API.Controllers
             if (string.IsNullOrWhiteSpace(json) || !json.Contains("id_token"))
             {
                 response.Status = ResponseStatus.Error;
-                response.Messages.Add("Unexpected response from OAuth server.");
-                return response;
+                response.Messages.Add("Unexpected response from OAuth server. Please contact the site administrator.");
             }
 
             //Parse out the id_token; this is a jwt
@@ -227,8 +230,7 @@ namespace Simplistant_API.Controllers
             if (string.IsNullOrWhiteSpace(id_token))
             {
                 response.Status = ResponseStatus.Error;
-                response.Messages.Add("Id token could not be parsed.");
-                return response;
+                response.Messages.Add("Id token could not be parsed. Please contact the site administrator.");
             }
 
             //Parse the email field from the jwt
@@ -243,7 +245,6 @@ namespace Simplistant_API.Controllers
             {
                 //Proceed with login as if they used username/password
                 _userAuthenticator.GenerateSession(HttpContext, emailData.Username);
-                return response;
             }
 
             //Otherwise, create new login data if it doesn't already exist
@@ -262,7 +263,10 @@ namespace Simplistant_API.Controllers
             _userAuthenticator.GenerateSession(HttpContext, loginData.Username);
             if (!string.IsNullOrWhiteSpace(callback))
                 HttpContext.Response.Redirect(callback);
-            return response;
+
+            return response.Status == ResponseStatus.Success
+                ? Content(@"<script>window.close();</script>", "text/html")
+                : Content($"{JsonConvert.SerializeObject(response)}", "text/javascript");
         }
 
         /// <summary>
