@@ -4,7 +4,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Simplistant_API.Attributes;
 using Simplistant_API.DTO;
 using Simplistant_API.DTO.Account;
 using Simplistant_API.Extensions;

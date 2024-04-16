@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using Simplistant_API.Attributes;
 using Simplistant_API.Controllers;
 using Simplistant_API.DTO;
 
@@ -14,7 +13,7 @@ namespace Simplistant_API.TypescriptModelGenerator
             GenerateAPIDefinitions();
         }
 
-        private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/dto.d.ts"; 
+        private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/API/dto.d.ts"; 
         private static void GenerateTypeDefinitions()
         {
             var enums = typeof(ResponseStatus).Assembly.GetTypes()
@@ -87,7 +86,7 @@ namespace Simplistant_API.TypescriptModelGenerator
             };
         }
 
-        private const string API_OUTPUT_FILE = "../../../../../Simplistant/api.tsx";
+        private const string API_OUTPUT_FILE = "../../../../../Simplistant/API/api.tsx";
         private static void GenerateAPIDefinitions()
         {
             var api_funcs = typeof(AccountController).Assembly.GetTypes()
@@ -96,9 +95,8 @@ namespace Simplistant_API.TypescriptModelGenerator
                 {
                     Name = x.Name.Replace("Controller", ""),
                     Methods = x.GetMethods()
-                        .Where(x => x.GetCustomAttribute<API_IgnoreAttribute>() == null
-                            && (x.GetCustomAttribute<HttpGetAttribute>() != null 
-                            || x.GetCustomAttribute<HttpPostAttribute>() != null))
+                        .Where( y => y.GetCustomAttribute<HttpGetAttribute>() != null 
+                                || y.GetCustomAttribute<HttpPostAttribute>() != null)
                         .OrderBy(y => y.Name)
                         .ToList()
                 }).OrderBy(x => x.Name)
