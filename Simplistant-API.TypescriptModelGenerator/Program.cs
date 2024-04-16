@@ -110,13 +110,24 @@ namespace Simplistant_API.TypescriptModelGenerator
                 .Select(x => ToTypescriptFunction(x.ControllerName, x.Action))
                 .ToList();
 
-            var file_data = "//Auto-generated client-side API functions\r\n"
-                + "import axios, { AxiosError } from \"axios\"\r\n"
-                + "import * as DTO from \"./dto\";\r\n\r\n"
-                + "const api_uri = \"https://simplistant-api.azurewebsites.net\";\r\n"
-                + "const config: Object = { withCredentials: true };\r\n"
-                + "const axiosInstance = axios.create(config);\r\n\r\n"
-                + string.Join("\r\n\r\n", api_funcs);
+            var file_data = @"//Auto-generated client-side API functions
+import axios, { AxiosError } from ""axios""
+import * as DTO from ""./dto"";
+
+const api_uri = ""https://simplistant-api.azurewebsites.net"";
+axios.defaults.withCredentials = true;
+axios.defaults.withXSRFToken = true;
+const config: Object = {
+    withCredentials: true,
+    withXSRFToken: true
+};
+const axiosInstance = axios.create(config);
+axiosInstance.interceptors.response.use(
+    response => (response),
+    error => (Promise.reject(error.response.data.err))
+);
+
+" + string.Join("\r\n\r\n", api_funcs);
 
             File.WriteAllText(API_OUTPUT_FILE, file_data);
         }

@@ -38,7 +38,7 @@ namespace Simplistant_API.Utility
             context.SetIdentity(authData);
         }
 
-        public async Task Authenticate(HttpContext context, Func<Task> next)
+        public bool Authenticate(HttpContext context)
         {
             var username = context.GetCurrentUser();
             var authToken = context.GetUserAuthToken();
@@ -70,8 +70,8 @@ namespace Simplistant_API.Utility
             {
                 context.User = new ClaimsPrincipal(Array.Empty<ClaimsIdentity>());
             }
-            
-            await next();
+
+            return context.User.Identity?.IsAuthenticated == true;
         }
     }
 }

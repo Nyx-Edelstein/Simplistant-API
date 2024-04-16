@@ -10,6 +10,6 @@
         /// <summary>
         /// Authenticates a session cookie and sets user claims for authorization
         /// </summary>
-        Task Authenticate(HttpContext httpContext, Func<Task> next);
+        bool Authenticate(HttpContext httpContext);
     }
 }
