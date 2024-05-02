@@ -4,6 +4,9 @@ namespace Simplistant_API.Extensions
 {
     public static class HttpContextExtensions
     {
+        private const string USER_IDENTITY_KEY = "USER_IDENTITY";
+        private const string OAUTH_EMAIL_KEY = "OAUTH_EMAIL";
+
         /// <summary>
         /// Not to be used outside of [Authorize] methods.
         /// </summary>
@@ -20,9 +23,17 @@ namespace Simplistant_API.Extensions
             return GetIdentity(httpContext).AuthToken;
         }
 
+        /// <summary>
+        /// Not to be used for any purpose except as a hint to the OAuth api.
+        /// </summary>
+        public static string GetOAuthEmail(this HttpContext httpContext)
+        {
+            return httpContext.Request.Cookies[OAUTH_EMAIL_KEY] ?? "";
+        }
+
         private static UserIdentity GetIdentity(this HttpContext httpContext)
         {
-            if (!httpContext.Request.Cookies.ContainsKey("USER_IDENTITY"))
+            if (!httpContext.Request.Cookies.ContainsKey(USER_IDENTITY_KEY))
             {
                 return new UserIdentity
                 {
@@ -30,11 +41,10 @@ namespace Simplistant_API.Extensions
                 };
             }
 
-            var serialized = httpContext.Request.Cookies["USER_IDENTITY"];
+            var serialized = httpContext.Request.Cookies[USER_IDENTITY_KEY];
             return Newtonsoft.Json.JsonConvert.DeserializeObject<UserIdentity>(serialized);
         }
-
-        public const string USER_IDENTITY_KEY = "USER_IDENTITY";
+        
         public static void SetIdentity(this HttpContext httpContext, AuthData authData)
         {
             if (httpContext.Request.Cookies.ContainsKey(USER_IDENTITY_KEY))
@@ -45,6 +55,18 @@ namespace Simplistant_API.Extensions
             {
                 Expires = authData.Expiry
             });
+
+            //We've already validated the username so if it contains an "@" symbol it's an email address
+            //i.e. - OAuth account
+            //Persist this value to cookies so that we can use it as the hint email in the OAuth API
+            var isOAuth = authData.Username.Contains("@");
+            if (isOAuth)
+            {
+                httpContext.Response.Cookies.Append(OAUTH_EMAIL_KEY, authData.Username, new CookieOptions
+                {
+                    Expires = DateTime.MaxValue
+                });
+            }
         }
         
         //We need to not store the BSON Id from the dataitem object.

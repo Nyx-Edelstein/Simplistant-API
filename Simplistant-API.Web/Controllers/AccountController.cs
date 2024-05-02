@@ -189,7 +189,8 @@ namespace Simplistant_API.Controllers
             //Redirect to Google OAuth2 API endpoint
             var client_id = _configItemRepository.GetWhere(x => x.Key == "Google_OAuth_ClientID").FirstOrDefault()?.Value;
             var redirect = WebUtility.UrlEncode($"{Request.Scheme}://{Request.Host}{Url.Action("OAuth")}");
-            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent";
+            var login_hint = HttpContext.GetOAuthEmail();
+            var oauth_url = $"https://accounts.google.com/o/oauth2/v2/auth?&client_id={client_id}&redirect_uri={redirect}&response_type=code&access_type=online&scope=email&prompt=consent&login_hint={login_hint}";
 
             return new RedirectResult(oauth_url, false);
         }
