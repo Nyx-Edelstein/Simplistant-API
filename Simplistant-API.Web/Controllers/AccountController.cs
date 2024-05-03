@@ -447,31 +447,16 @@ namespace Simplistant_API.Controllers
         }
 
         /// <summary>
-        /// Clears the current login session.
+        /// Clears all login sessions associated with the account.
         /// Requires an active session.
         /// </summary>
         [HttpGet]
         [Authorize]
         public MessageResponse Logout()
         {
-            //Todo: clear cookies
-            var username = HttpContext.GetCurrentUser();
-            var authToken = HashPassword(HttpContext.GetUserAuthToken());
-            _authDataRepository.RemoveWhere(x => x.Username == username && x.AuthToken == authToken);
-            return new MessageResponse();
-        }
-
-        /// <summary>
-        /// Clears all login sessions associated with the account.
-        /// Requires an active session.
-        /// </summary>
-        [HttpGet]
-        [Authorize]
-        public MessageResponse LogoutAllDevices()
-        {
-            //Todo: clear cookies
             var username = HttpContext.GetCurrentUser();
             _authDataRepository.RemoveWhere(x => x.Username == username);
+            HttpContext.Response.Cookies.Delete("USER_IDENTITY");
             return new MessageResponse();
         }
 
