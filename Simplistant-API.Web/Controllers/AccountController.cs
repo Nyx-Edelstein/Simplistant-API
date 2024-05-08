@@ -603,6 +603,35 @@ namespace Simplistant_API.Controllers
         }
 
         /// <summary>
+        /// Check to see if the current user's email is confirmed.
+        /// Requires an active session.
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public bool EmailConfirmed()
+        {
+            var username = HttpContext.GetCurrentUser();
+            
+            var loginData = _loginDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
+            if (loginData == null)
+            {
+                //This shouldn't happen since the user is authenticated, but need to do the check anyway for type safety / best practices
+                //Could also throw an exception, but principle of least suprise suggests "return false"
+                return false;
+            }
+
+            var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
+            if (emailData == null)
+            {
+                //Similar to above
+                return false;
+            }
+
+            var result = loginData.LoginType == (int)LoginType.OAuth || (loginData.LoginType == (int)LoginType.UsernamePassword && emailData.EmailConfirmed);
+            return result;
+        }
+
+        /// <summary>
         /// Check to see if the current user is logged in.
         /// </summary>
         [HttpGet]
