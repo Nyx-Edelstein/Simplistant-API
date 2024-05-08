@@ -619,6 +619,7 @@ namespace Simplistant_API.Controllers
                 //Could also throw an exception, but principle of least suprise suggests "return false"
                 return false;
             }
+            if (loginData.LoginType == (int)LoginType.OAuth) return true;
 
             var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
             if (emailData == null)
@@ -627,7 +628,8 @@ namespace Simplistant_API.Controllers
                 return false;
             }
 
-            var result = loginData.LoginType == (int)LoginType.OAuth || (loginData.LoginType == (int)LoginType.UsernamePassword && emailData.EmailConfirmed);
+            var result = loginData.LoginType == (int)LoginType.UsernamePassword
+                && emailData.EmailConfirmed;
             return result;
         }
 
