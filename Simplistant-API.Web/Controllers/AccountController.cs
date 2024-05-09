@@ -24,7 +24,6 @@ namespace Simplistant_API.Controllers
     [Route("/[controller]/[action]")]
     public class AccountController : ControllerBase
     {
-        private const string FRONTEND = "https://simplistant.azurewebsites.net";
         private IRepository<ConfigItem> _configItemRepository { get; }
         private IRepository<LoginData> _loginDataRepository { get; }
         private IRepository<AuthData> _authDataRepository { get; }
@@ -275,7 +274,7 @@ namespace Simplistant_API.Controllers
             }
 
             return response.status == ResponseStatus.Success
-                ? new RedirectResult(FRONTEND, false)
+                ? new RedirectResult("https://simplistant.azurewebsites.net", false)
                 : Content($"{JsonConvert.SerializeObject(response)}", "application/json");
         }
 
@@ -370,9 +369,9 @@ namespace Simplistant_API.Controllers
         /// Confirm an email address using a token supplied during the registration process.
         /// Requires active session.
         /// </summary>
-        [HttpGet]
+        [HttpPost]
         [Authorize]
-        public ActionResult ConfirmEmail(string confirmationToken, bool redirectToFrontend)
+        public MessageResponse ConfirmEmail(ConfirmEmailRequest request)
         {
             var response = new MessageResponse();
             var username = HttpContext.GetCurrentUser();
@@ -383,16 +382,16 @@ namespace Simplistant_API.Controllers
             {
                 response.status = ResponseStatus.Error;
                 response.messages.Add("No recovery email on record.");
-                return Content($"{JsonConvert.SerializeObject(response)}", "application/json");
+                return response;
             }
             
             //Validate confirmation token
-            var tokenIsValid = Verify(confirmationToken, emailData.ConfirmationToken);
+            var tokenIsValid = Verify(request.ConfirmationToken, emailData.ConfirmationToken);
             if (!tokenIsValid)
             {
                 response.status = ResponseStatus.Error;
                 response.messages.Add("The confirmation code could not be verified. Try resending the confirmation email.");
-                return Content($"{JsonConvert.SerializeObject(response)}", "application/json");
+                return response;
             }
 
             //Success; set email confirmed flag
@@ -400,14 +399,7 @@ namespace Simplistant_API.Controllers
             emailData.EmailConfirmed = true;
             _emailDataRepository.Upsert(emailData);
             response.messages.Add("Recovery email has been confirmed.");
-            if (redirectToFrontend)
-            {
-                return new RedirectResult(FRONTEND, false);
-            }
-            else
-            {
-                return Content($"{JsonConvert.SerializeObject(response)}", "application/json");
-            }
+            return response;
         }
 
         /// <summary>
