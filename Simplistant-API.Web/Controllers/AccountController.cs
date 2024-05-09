@@ -543,8 +543,17 @@ namespace Simplistant_API.Controllers
                 return response;
             }
 
+            //Validate password
+            var passwordValid = Verify(request.Password, loginData.HashedSecret);
+            if (!passwordValid)
+            {
+                response.status = ResponseStatus.Error;
+                response.messages.Add("Password is invalid.");
+                return response;
+            }
+
             //Validate email
-            if (!new EmailAddressAttribute().IsValid(request.Email))
+            if (!new EmailAddressAttribute().IsValid(request.NewEmail))
             {
                 response.status = ResponseStatus.Error;
                 response.messages.Add("Provided email address is not a correct format.");
@@ -559,13 +568,13 @@ namespace Simplistant_API.Controllers
                 emailData = new EmailData
                 {
                     Username = username,
-                    RecoveryEmail = request.Email
+                    RecoveryEmail = request.NewEmail
                 };
             }
             else
             {
                 //Update old record
-                emailData.RecoveryEmail = request.Email;
+                emailData.RecoveryEmail = request.NewEmail;
             }
 
             //Generate confirmation token and store updated record
@@ -578,10 +587,10 @@ namespace Simplistant_API.Controllers
             _recoveryDataRepository.RemoveWhere(x => x.Username == username);
 
             //Send confirmation email
-            var success = _emailProvider.SendConfirmationEmail(username, request.Email, confirmationToken);
+            var success = _emailProvider.SendConfirmationEmail(username, request.NewEmail, confirmationToken);
             if (success)
             {
-                response.messages.Add($"Follow instructions sent to '{request.Email}' to confirm the new address. You may need to check your spam folder.");
+                response.messages.Add($"Follow instructions sent to '{request.NewEmail}' to confirm the new address. You may need to check your spam folder.");
             }
             else
             {
@@ -603,12 +612,12 @@ namespace Simplistant_API.Controllers
         }
 
         /// <summary>
-        /// Check to see if the current user's email is confirmed.
+        /// Retrieves user account information.
         /// Requires an active session.
         /// </summary>
         [HttpGet]
         [Authorize]
-        public bool EmailConfirmed()
+        public AccountInfo GetAccountInfo()
         {
             var username = HttpContext.GetCurrentUser();
             
@@ -616,21 +625,28 @@ namespace Simplistant_API.Controllers
             if (loginData == null)
             {
                 //This shouldn't happen since the user is authenticated, but need to do the check anyway for type safety / best practices
-                //Could also throw an exception, but principle of least suprise suggests "return false"
-                return false;
+                throw new Exception($"Couldn't find the user '{username}'. Something's probably borked.");
             }
-            if (loginData.LoginType == (int)LoginType.OAuth) return true;
+
+            var accountInfo = new AccountInfo
+            {
+                Username = username,
+                IsOAuthAccount = loginData.LoginType == (int)LoginType.OAuth
+            };
 
             var emailData = _emailDataRepository.GetWhere(x => x.Username == username).FirstOrDefault();
-            if (emailData == null)
+            if (emailData != null)
             {
-                //Similar to above
-                return false;
+                accountInfo.Email = emailData.RecoveryEmail;
+                accountInfo.EmailConfirmed = emailData.EmailConfirmed;
+            }
+            else
+            {
+                accountInfo.Email = "";
+                accountInfo.EmailConfirmed = false;
             }
 
-            var result = loginData.LoginType == (int)LoginType.UsernamePassword
-                && emailData.EmailConfirmed;
-            return result;
+            return accountInfo;
         }
 
         /// <summary>
