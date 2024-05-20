@@ -24,7 +24,7 @@
             var highest = 100;
             window.onload = function () {
                 setInterval(() => {
-                    total += 1;
+                    total = Math.max(total + 1, Math.round(total * 1.01));
                     document.getElementById("#total").textContent = total;
                     if (total > highest) {
                         highest = total;
@@ -35,7 +35,7 @@
             function roll() {
                 var rand = Math.floor(Math.random() * 2);
                 if (rand == 0) {
-                    total = 0;
+                    total = 1;
                 }
                 else {
                     total *= 2;
