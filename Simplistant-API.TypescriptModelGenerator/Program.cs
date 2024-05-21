@@ -154,6 +154,7 @@ axiosInstance.interceptors.response.use(
             var actionReturnType = ToTSType(action.ReturnType.Name);
 
             return $@"export const {actionName} = async ({parameterString}): Promise<0 | string | {actionReturnType}> => {{
+    console.log(""API - {actionName}, {actionHttpType}"");
     const endpoint = `${{api_uri}}/{controllerName}/{actionName}{get_params}`;
     return await axiosInstance.{actionHttpType}<{actionReturnType}>(endpoint{post_data})
         .then(response => {{
