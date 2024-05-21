@@ -158,7 +158,7 @@ axiosInstance.interceptors.response.use(
     const endpoint = `${{api_uri}}/{controllerName}/{actionName}{get_params}`;
     return await axiosInstance.{actionHttpType}<{actionReturnType}>(endpoint{post_data})
         .then(response => {{
-            console.log(response);
+            console.log(response.data);
             return response.data;
         }})
         .catch((axiosError: AxiosError) => {{
