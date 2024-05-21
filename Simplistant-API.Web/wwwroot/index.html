@@ -5,51 +5,13 @@
 </head>
 <body>
     <div>
-        <img src="/Simplistant-Logo.png" height="128" onclick="show()"/>
+        <img src="/Simplistant-Logo.png" height="128"/>
     <br />
     <span>Hello. This is the API for Simplistant. You may be looking for the <a href="https://simplistant.azurewebsites.net">frontend application.</a></span>
     <br/>
     <a href="https://simplistant-api.azurewebsites.net/Account/LoginOAuth">
         <button type="submit" class="btn-link">Login with Google</button>
     </a>
-    </div>
-    <hr/>
-    <div id="#game" style="display: none">
-        <h1>Silly game</h1>
-        <span>Total: </span><span id="#total">1</span><br />
-        <span>Highest: </span><span id="#highest">1</span><br />
-        <button onclick="roll()">Chance It</button>
-        <script>
-            var total = 100;
-            var highest = 100;
-            window.onload = function () {
-                setInterval(() => {
-                    total = Math.max(total + 1, Math.round(total * 1.01));
-                    document.getElementById("#total").textContent = total;
-                    if (total > highest) {
-                        highest = total;
-                    }
-                    document.getElementById("#highest").textContent = highest;
-                }, 100);
-            };
-            function roll() {
-                var rand = Math.floor(Math.random() * 2);
-                if (rand == 0) {
-                    total = 1;
-                }
-                else {
-                    total *= 2;
-                }
-                document.getElementById("#total").textContent = total;
-                if (total > highest) {
-                    highest = total;
-                }
-                document.getElementById("#highest").textContent = highest;
-            }
-            function show() {
-                document.getElementById("#game").style.display = "block";
-            }
-        </script>
     </div>
 </body>
 </html>

@@ -50,7 +50,12 @@ namespace Simplistant_API.TypescriptModelGenerator
         private static string ToTypescriptInterface(Type type) =>
             $"export interface {type.Name} {{\r\n\t{string.Join("\r\n\t", type.GetProperties().Select(ToTypescriptProperty).ToList())}\r\n}}\r\n";
 
-        private static string ToTypescriptProperty(PropertyInfo property) => $"{property.Name}: {ToTypescriptType(property.PropertyType)};";
+        private static string CamelCase(string name)
+        {
+            return name[0].ToString().ToLower() + string.Join("", name.Skip(1).ToList());
+        }
+
+        private static string ToTypescriptProperty(PropertyInfo property) => $"{CamelCase(property.Name)}: {ToTypescriptType(property.PropertyType)};";
 
         private static string ToTypescriptType(Type propType)
         {
@@ -152,7 +157,7 @@ axiosInstance.interceptors.response.use(
     const endpoint = `${{api_uri}}/{controllerName}/{actionName}{get_params}`;
     return await axiosInstance.{actionHttpType}<{actionReturnType}>(endpoint{post_data})
         .then(response => {{
-            //console.log(response);
+            console.log(response);
             return response.data;
         }})
         .catch((axiosError: AxiosError) => {{
