@@ -42,6 +42,10 @@ namespace Simplistant_API
                         .AllowCredentials()
                         .AllowAnyHeader()
                         .AllowAnyMethod();
+                    //builder.WithOrigins("http://localhost:5173")
+                    //    .AllowCredentials()
+                    //    .AllowAnyHeader()
+                    //    .AllowAnyMethod();
                 });
             });
 

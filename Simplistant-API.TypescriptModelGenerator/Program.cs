@@ -14,7 +14,10 @@ namespace Simplistant_API.TypescriptModelGenerator
             GenerateAPIDefinitions();
         }
 
-        private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/API/dto.tsx"; 
+        private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/API/dto.tsx";
+
+        private const string BACKEND = "https://simplistant-api.azurewebsites.net";
+        //private const string BACKEND = "https://localhost:7033";
         private static void GenerateTypeDefinitions()
         {
             var enums = typeof(ResponseStatus).Assembly.GetTypes()
@@ -115,17 +118,17 @@ namespace Simplistant_API.TypescriptModelGenerator
                 .Select(x => ToTypescriptFunction(x.ControllerName, x.Action))
                 .ToList();
 
-            var file_data = @"//Auto-generated client-side API functions
-import axios, { AxiosError } from ""axios""
+            var file_data = $@"//Auto-generated client-side API functions
+import axios, {{ AxiosError }} from ""axios""
 import * as DTO from ""./dto"";
 
-const api_uri = ""https://simplistant-api.azurewebsites.net"";
+const api_uri = ""{BACKEND}"";
 axios.defaults.withCredentials = true;
 axios.defaults.withXSRFToken = true;
-const config: Object = {
+const config: Object = {{
     withCredentials: true,
     withXSRFToken: true
-};
+}};
 const axiosInstance = axios.create(config);
 axiosInstance.interceptors.response.use(
     response => (response),
