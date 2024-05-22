@@ -362,5 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Data.ldb
+/Data-log.ldb
 /System.ldb
+/System-log.ldb
 /Users.ldb
+/Users-log.ldb
