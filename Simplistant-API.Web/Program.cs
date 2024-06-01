@@ -50,20 +50,20 @@ namespace Simplistant_API
             });
 
             //System repositories
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
+            builder.Services.AddScoped(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
+            builder.Services.AddScoped(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
 
             //User repositories
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
+            builder.Services.AddScoped(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
+            builder.Services.AddScoped(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
+            builder.Services.AddScoped(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
+            builder.Services.AddScoped(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
 
             //Data repositories
 
             //Utilities
-            builder.Services.AddTransient<IEmailProvider, EmailProvider>();
-            builder.Services.AddTransient<IUserAuthenticator, UserAuthenticator>();
+            builder.Services.AddScoped<IEmailProvider, EmailProvider>();
+            builder.Services.AddScoped<IUserAuthenticator, UserAuthenticator>();
 
             //-----------
             var app = builder.Build();

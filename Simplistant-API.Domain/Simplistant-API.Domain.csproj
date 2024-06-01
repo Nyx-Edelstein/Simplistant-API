@@ -2,16 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>Simplistant_API.Models</RootNamespace>
+    <RootNamespace>Simplistant_API.Domain</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="System\" />
+    <PackageReference Include="NHunspell" Version="1.2.5554.16953" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Simplistant-API.Models\Simplistant-API.Models.csproj" />
     <ProjectReference Include="..\Simplistant-API.Repository\Simplistant-API.Repository.csproj" />
   </ItemGroup>
 
