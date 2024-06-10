@@ -361,10 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Data.ldb
-/Data-log.ldb
+
+# LiteDB files
 /System.ldb
 /System-log.ldb
 /Users.ldb
 /Users-log.ldb
-/Data/664e507dc64b0f0a18f8877c
+/Data/*
+/System-log.ldb
