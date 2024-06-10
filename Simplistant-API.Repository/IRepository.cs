@@ -7,5 +7,6 @@ namespace Simplistant_API.Repository
         List<T> GetWhere(Expression<Func<T, bool>> filter);
         void RemoveWhere(Expression<Func<T, bool>> filter);
         bool Upsert(T data);
+        void InsertMany(List<T> items);
     }
 }

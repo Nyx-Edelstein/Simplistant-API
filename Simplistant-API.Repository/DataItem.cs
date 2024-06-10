@@ -4,7 +4,8 @@ namespace Simplistant_API.Repository
 {
     public abstract class DataItem
     {
-        public BsonValue? Id { get; set; }
+        [BsonId]
+        public ObjectId? Id { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]

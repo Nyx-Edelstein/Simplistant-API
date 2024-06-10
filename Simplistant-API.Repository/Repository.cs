@@ -38,7 +38,7 @@ namespace Simplistant_API.Repository
             _Instance.GetCollection<T>()
                 .DeleteMany(filter);
         }
-
+        
         public bool Upsert(T item)
         {
             if (item.Id == null)
@@ -52,6 +52,14 @@ namespace Simplistant_API.Repository
             //If it fails an exception will be thrown
             //User will see an error page and it will be logged upstream
             return true;
+        }
+
+        public void InsertMany(List<T> items)
+        {
+            items.ForEach(item => item.Id ??= ObjectId.NewObjectId());
+
+            _Instance.GetCollection<T>()
+                .InsertBulk(items);
         }
     }
 

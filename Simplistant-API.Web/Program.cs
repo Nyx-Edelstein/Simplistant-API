@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 using Simplistant_API.DTO;
 using Simplistant_API.Models.System;
 using Simplistant_API.Models.Users;
+using LiteDB;
+using Simplistant_API.Models.Data;
 
 namespace Simplistant_API
 {
@@ -38,32 +40,40 @@ namespace Simplistant_API
             {
                 options.AddPolicy("frontend", builder =>
                 {
-                    builder.WithOrigins("https://simplistant.azurewebsites.net")
-                        .AllowCredentials()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                    //builder.WithOrigins("http://localhost:5173")
+                    //builder.WithOrigins("https://simplistant.azurewebsites.net")
                     //    .AllowCredentials()
                     //    .AllowAnyHeader()
                     //    .AllowAnyMethod();
+                    builder.WithOrigins("http://localhost:5173")
+                        .AllowCredentials()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
             });
 
             //System repositories
-            builder.Services.AddScoped(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
-            builder.Services.AddScoped(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
 
             //User repositories
-            builder.Services.AddScoped(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
-            builder.Services.AddScoped(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
-            builder.Services.AddScoped(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
-            builder.Services.AddScoped(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
+            builder.Services.AddTransient(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
 
             //Data repositories
+            //todo: need a repository factory service (lol)
+
+            //Repository configuration
+            BsonMapper.Global.RegisterType
+            (
+                serialize: collection => collection.Serialize(),
+                deserialize: bson => new MatchDataCollection(bson)
+            );
 
             //Utilities
-            builder.Services.AddScoped<IEmailProvider, EmailProvider>();
-            builder.Services.AddScoped<IUserAuthenticator, UserAuthenticator>();
+            builder.Services.AddTransient<IEmailProvider, EmailProvider>();
+            builder.Services.AddTransient<IUserAuthenticator, UserAuthenticator>();
 
             //-----------
             var app = builder.Build();

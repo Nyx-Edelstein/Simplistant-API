@@ -16,8 +16,8 @@ namespace Simplistant_API.TypescriptModelGenerator
 
         private const string DTO_OUTPUT_FILE = "../../../../../Simplistant/API/dto.tsx";
 
-        private const string BACKEND = "https://simplistant-api.azurewebsites.net";
-        //private const string BACKEND = "https://localhost:7033";
+        //private const string BACKEND = "https://simplistant-api.azurewebsites.net";
+        private const string BACKEND = "https://localhost:7033";
         private static void GenerateTypeDefinitions()
         {
             var enums = typeof(ResponseStatus).Assembly.GetTypes()
