@@ -1,6 +1,4 @@
-﻿using Simplistant_API.Models.Users;
-
-namespace Simplistant_API.DTO.Account
+﻿namespace Simplistant_API.DTO.Account
 {
     public class AccountInfo
     {

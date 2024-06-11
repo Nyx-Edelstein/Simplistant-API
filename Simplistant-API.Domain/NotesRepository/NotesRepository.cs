@@ -1,9 +1,9 @@
 ﻿using LiteDB;
 using Simplistant_API.Domain.Markdown;
-using Simplistant_API.Domain.Search;
 using Simplistant_API.Domain.Stemming;
+using Simplistant_API.DTO.Notes;
 using Simplistant_API.Models.Data;
-using Simplistant_API.Repository;
+using Simplistant_API.Models.Repository;
 
 namespace Simplistant_API.Domain.NotesRepository
 {
@@ -28,26 +28,26 @@ namespace Simplistant_API.Domain.NotesRepository
             Stemmer = stemmer;
         }
 
-        //Notes:
-        //  * Save and Delete are O(n + log(k)) with n = size of NoteData collection and k size of IndexData collection
-        //    k ~= n*t*l with t being average tokens per note and l being average token length
-        //    (With overlap of n-grams, so at some point it gets saturated and k is essentially a constant)
-        //  * Search is O(t * (log(k) + mlog(n))) with:
-        //    t = number of tokens to search (probably not more than 2-3)
-        //    k = size of IndexData collection
-        //    m = number of NoteData matches (usually very small)
-        //    n = size of NoteData collection
-        //    Dominating terms are k and n so roughly O(log(n) + log(k))
-        //    Keep in mind that this is after the optimization of splitting out indexes per user
-        //    --i.e. there is overhead there too
-        //    A lot of work to avoid a full collection scan!
-        //    Future: def need a better database than LiteDb for scaling past a couple dozen users)
-
-
-        public void Save(NoteData note)
+        public NoteData? Get(ObjectId noteId)
         {
+            return NoteDataRepository.GetWhere(x => x.Id == noteId).FirstOrDefault();
+        }
+
+        public void Save(Note noteDTO)
+        {
+            //Todo: might be an issue with Guid.Parse
+            var note = new NoteData
+            {
+                Id = ObjectId.NewObjectId(),
+                HistoryId = Guid.Parse(noteDTO.HistoryId),
+                Title = noteDTO.Title,
+                Tags = noteDTO.Tags.ToArray(),
+                Markdown = noteDTO.Markdown,
+                Archived = noteDTO.Archived,
+            };
+
             //Get the most recent version with the same revision history
-            var existingNotes = NoteDataRepository.GetWhere(x => x.ItemId == note.ItemId);
+            var existingNotes = NoteDataRepository.GetWhere(x => x.HistoryId == note.HistoryId);
             if (existingNotes.Count == 0)
             {
                 //If there is no most recent, save this version as the first
@@ -62,6 +62,22 @@ namespace Simplistant_API.Domain.NotesRepository
             var oldVersion = existingNotes.Max(x => x.Version);
             var oldNote = existingNotes.First(x => x.Version == oldVersion);
             note.Version = oldVersion + 1;
+
+            //Autopopulate change notes if not specified
+            if (string.IsNullOrWhiteSpace(note.Changes))
+            {
+                var changes = new List<string>();
+                if (oldNote.Title != note.Title) changes.Add("title");
+                if (!oldNote.Tags.SequenceEqual(note.Tags)) changes.Add("tags");
+                if (oldNote.Markdown != note.Markdown) changes.Add("content");
+                if (changes.Count != 0)
+                {
+                    note.Changes = $"Changed: {string.Join(", ", changes)}";
+                }
+            }
+
+            note.TimeStamp = DateTime.UtcNow;
+
             NoteDataRepository.Upsert(note);
 
             //Remove the old version from the index and add the most recent version
@@ -69,12 +85,12 @@ namespace Simplistant_API.Domain.NotesRepository
             AddToIndex(note);
         }
 
-        public void Delete(Guid noteItemId)
+        public void Delete(Guid historyId)
         {
             //O(n) in NoteData collection + O(log(k))
 
             //Get all notes with the same version history
-            var item_group = NoteDataRepository.GetWhere(x => x.ItemId == noteItemId);
+            var item_group = NoteDataRepository.GetWhere(x => x.HistoryId == historyId);
             if (item_group.Any())
             {
                 //Get most recent version
@@ -83,14 +99,25 @@ namespace Simplistant_API.Domain.NotesRepository
                 //Remove most version from the index
                 RemoveFromIndex(most_recent);
             }
-            //Remove all notes with the same itemid from database
-            NoteDataRepository.RemoveWhere(x => x.ItemId == noteItemId);
+            //Remove all notes with the same version history from database
+            NoteDataRepository.RemoveWhere(x => x.HistoryId == historyId);
         }
+
+        public List<SearchSummary> Catalog() => NoteDataRepository.GetWhere(x => !x.Archived)
+            .Select(noteData => new SearchSummary
+            {
+                NoteId = noteData.Id.ToString(),
+                Title = noteData.Title,
+                Tags = noteData.Tags.ToList(),
+                Score = 1,
+            }).OrderBy(x => x.Title)
+            .ThenBy(x => x.Tags.FirstOrDefault() ?? "")
+            .ToList();
 
         public List<SearchSummary> Search(string[] searchTokens, bool includeArchived)
         {
             //Get matches for each token
-            var matches = new Dictionary<ObjectId, SearchSummary>();
+            var matches = new Dictionary<string, SearchSummary>();
             foreach (var token in searchTokens)
             {
                 var submatches = Search(token, includeArchived);
@@ -126,9 +153,9 @@ namespace Simplistant_API.Domain.NotesRepository
                 var noteData = NoteDataRepository.GetWhere(note => note.Id == noteId).First();
                 return new SearchSummary
                 {
-                    NoteId = noteId,
+                    NoteId = noteId.ToString(),
                     Title = noteData.Title,
-                    Tags = noteData.Tags,
+                    Tags = noteData.Tags.ToList(),
                     Score = matchData.Score(),
                     Archived = noteData.Archived
                 };
@@ -235,8 +262,8 @@ namespace Simplistant_API.Domain.NotesRepository
             var set = new HashSet<string>();
 
             var stems = strs.SelectMany(x => Stemmer.Stem(x).Union([x]))
-                .Distinct()
-                .Where(x => x.Length >= 3);
+                .Where(x => x.Length >= 3)
+                .Distinct();
 
             foreach (var str in stems)
             {

@@ -1,16 +1,15 @@
-﻿using Simplistant_API.Repository;
-
-namespace Simplistant_API.Models.Data
+﻿namespace Simplistant_API.Models.Data
 {
+    [HasGuidKey("HistoryId", isUnique: false)]
     public class NoteData : DataItem
     {
-        public Guid ItemId { get; set; }
+        public Guid HistoryId { get; set; }
         public int Version { get; set; }
         public string Title { get; set; }
         public string[] Tags { get; set; }
         public string Markdown { get; set; }
         public DateTime TimeStamp { get; set; }
-        public string EditNotes { get; set; }
+        public string Changes { get; set; }
         public bool Archived { get; set; }
     }
 }

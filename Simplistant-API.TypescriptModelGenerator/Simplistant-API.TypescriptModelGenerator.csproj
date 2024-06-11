@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Simplistant-API.DTO\Simplistant-API.DTO.csproj" />
     <ProjectReference Include="..\Simplistant-API.Web\Simplistant-API.Web.csproj" />
   </ItemGroup>
 

@@ -2,7 +2,7 @@
 
 namespace Simplistant_API.Domain.Stemming
 {
-    internal class Stemmer : IStemmer, IDisposable
+    public class Stemmer : IStemmer, IDisposable
     {
         private Hunspell _Hunspell { get; } = new();
 

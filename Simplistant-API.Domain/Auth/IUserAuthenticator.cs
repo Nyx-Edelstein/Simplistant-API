@@ -1,4 +1,6 @@
-﻿namespace Simplistant_API.Utility.Interface
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Simplistant_API.Domain.Auth
 {
     public interface IUserAuthenticator
     {

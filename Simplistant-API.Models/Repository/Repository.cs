@@ -2,7 +2,7 @@
 using System.Reflection;
 using LiteDB;
 
-namespace Simplistant_API.Repository
+namespace Simplistant_API.Models.Repository
 {
     internal class Repository<T> : IRepository<T>
         where T : DataItem
@@ -38,7 +38,7 @@ namespace Simplistant_API.Repository
             _Instance.GetCollection<T>()
                 .DeleteMany(filter);
         }
-        
+
         public bool Upsert(T item)
         {
             if (item.Id == null)

@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Simplistant-API.Domain\Simplistant-API.Domain.csproj" />
     <ProjectReference Include="..\Simplistant-API.Models\Simplistant-API.Models.csproj" />
     <ProjectReference Include="..\Simplistant-API.Repository\Simplistant-API.Repository.csproj" />
   </ItemGroup>

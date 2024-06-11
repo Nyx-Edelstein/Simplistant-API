@@ -8,14 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
     <PackageReference Include="Markdig" Version="0.37.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="NHunspell" Version="1.2.5554.16953" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Simplistant-API.DTO\Simplistant-API.DTO.csproj" />
     <ProjectReference Include="..\Simplistant-API.Models\Simplistant-API.Models.csproj" />
-    <ProjectReference Include="..\Simplistant-API.Repository\Simplistant-API.Repository.csproj" />
   </ItemGroup>
 
 </Project>

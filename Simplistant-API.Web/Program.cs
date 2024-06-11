@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.CookiePolicy;
-using Simplistant_API.Extensions;
-using Simplistant_API.Repository;
 using Simplistant_API.Utility;
 using Simplistant_API.Utility.Interface;
 using System.Net;
@@ -12,6 +10,13 @@ using Simplistant_API.Models.System;
 using Simplistant_API.Models.Users;
 using LiteDB;
 using Simplistant_API.Models.Data;
+using Simplistant_API.Domain.Markdown;
+using Simplistant_API.Domain.Stemming;
+using Simplistant_API.Domain.NotesRepository;
+using Simplistant_API.Models;
+using Simplistant_API.Models.Repository;
+using Simplistant_API.Domain.Auth;
+using Simplistant_API.Domain.Extensions;
 
 namespace Simplistant_API
 {
@@ -23,6 +28,7 @@ namespace Simplistant_API
 
             //Misc boilerplate
             builder.Services.AddControllers();
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
@@ -51,29 +57,40 @@ namespace Simplistant_API
                 });
             });
 
-            //System repositories
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<ConfigItem>(DatabaseSelector.System));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System));
-
-            //User repositories
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<AuthData>(DatabaseSelector.Users));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<EmailData>(DatabaseSelector.Users));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<LoginData>(DatabaseSelector.Users));
-            builder.Services.AddTransient(_ => RepositoryFactory.Create<RecoveryData>(DatabaseSelector.Users));
-
-            //Data repositories
-            //todo: need a repository factory service (lol)
-
             //Repository configuration
+            //(Technically not part of the app config process but not a better place to put it.)
             BsonMapper.Global.RegisterType
             (
                 serialize: collection => collection.Serialize(),
                 deserialize: bson => new MatchDataCollection(bson)
             );
 
-            //Utilities
+            //System repositories
+            builder.Services.AddTransient(_ => Repositories.System<ConfigItem>());
+            builder.Services.AddTransient(_ => Repositories.System<ExceptionLog>());
+
+            //User repositories
+            builder.Services.AddTransient(_ => Repositories.Users<AuthData>());
+            builder.Services.AddTransient(_ => Repositories.Users<EmailData>());
+            builder.Services.AddTransient(_ => Repositories.Users<LoginData>());
+            builder.Services.AddTransient(_ => Repositories.Users<RecoveryData>());
+
+            //Data repositories
+            static IRepository<T> ResolveDataRepository<T>(IServiceProvider sp) where T : DataItem
+            {
+                var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+                var userId = httpContextAccessor.HttpContext.GetCurrentUserId();
+                return Repositories.Data<T>(userId);
+            };
+            builder.Services.AddTransient(ResolveDataRepository<IndexData>);
+            builder.Services.AddTransient(ResolveDataRepository<NoteData>);
+
+            //Domain logic classes
             builder.Services.AddTransient<IEmailProvider, EmailProvider>();
             builder.Services.AddTransient<IUserAuthenticator, UserAuthenticator>();
+            builder.Services.AddTransient<IMarkdownTokenizer, MarkdownTokenizer>();
+            builder.Services.AddTransient<IStemmer, Stemmer>();
+            builder.Services.AddTransient<INotesRepository, NotesRepository>();
 
             //-----------
             var app = builder.Build();

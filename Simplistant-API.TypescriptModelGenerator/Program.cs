@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
-using Simplistant_API.Attributes;
 using Simplistant_API.Controllers;
+using Simplistant_API.Domain.Attributes;
 using Simplistant_API.DTO;
 
 namespace Simplistant_API.TypescriptModelGenerator
@@ -90,7 +90,7 @@ namespace Simplistant_API.TypescriptModelGenerator
                 "List`1" => genericType.Name == "String" ? "string[]"
                     : genericType.Name == "Int32" ? "number[]"
                     : genericType.Name == "Boolean" ? "boolean[]"
-                    : "any",
+                    : genericType.Name + "[]",
                 _ => "any"
             };
         }

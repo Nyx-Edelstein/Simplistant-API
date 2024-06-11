@@ -1,6 +1,4 @@
-﻿using Simplistant_API.Repository;
-
-namespace Simplistant_API.Models.System
+﻿namespace Simplistant_API.Models.System
 {
     public class ExceptionLog : DataItem
     {

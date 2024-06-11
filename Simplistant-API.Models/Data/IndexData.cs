@@ -1,6 +1,5 @@
 ﻿using LiteDB;
 using Newtonsoft.Json;
-using Simplistant_API.Repository;
 
 namespace Simplistant_API.Models.Data
 {

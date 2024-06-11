@@ -1,6 +1,9 @@
-﻿using Simplistant_API.Models.Users;
+﻿using LiteDB;
+using Microsoft.AspNetCore.Http;
+using Simplistant_API.Models.Users;
+using System.Security.Claims;
 
-namespace Simplistant_API.Extensions
+namespace Simplistant_API.Domain.Extensions
 {
     public static class HttpContextExtensions
     {
@@ -12,7 +15,7 @@ namespace Simplistant_API.Extensions
         /// </summary>
         public static string GetCurrentUser(this HttpContext httpContext)
         {
-            return GetIdentity(httpContext).Username;
+            return httpContext.GetIdentity().Username;
         }
 
         /// <summary>
@@ -20,8 +23,18 @@ namespace Simplistant_API.Extensions
         /// </summary>
         public static string GetUserAuthToken(this HttpContext httpContext)
         {
-            return GetIdentity(httpContext).AuthToken;
+            return httpContext.GetIdentity().AuthToken;
         }
+
+        /// <summary>
+        /// Not to be used outside of [Authorize] methods.
+        /// </summary>
+        public static ObjectId GetCurrentUserId(this HttpContext httpContext)
+        {
+            var id = httpContext.User.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault()?.Value ?? "";
+            return new ObjectId(id);
+        }
+
 
         /// <summary>
         /// Not to be used for any purpose except as a hint to the OAuth api.
@@ -31,20 +44,21 @@ namespace Simplistant_API.Extensions
             return httpContext.Request.Cookies[OAUTH_EMAIL_KEY] ?? "";
         }
 
+
         private static UserIdentity GetIdentity(this HttpContext httpContext)
         {
             if (!httpContext.Request.Cookies.ContainsKey(USER_IDENTITY_KEY))
             {
                 return new UserIdentity
                 {
-                    Username = "Guest"
+                    Username = "Guest",
                 };
             }
 
             var serialized = httpContext.Request.Cookies[USER_IDENTITY_KEY];
             return Newtonsoft.Json.JsonConvert.DeserializeObject<UserIdentity>(serialized);
         }
-        
+
         public static void SetIdentity(this HttpContext httpContext, AuthData authData)
         {
             if (httpContext.Request.Cookies.ContainsKey(USER_IDENTITY_KEY))
@@ -68,7 +82,7 @@ namespace Simplistant_API.Extensions
                 });
             }
         }
-        
+
         //We need to not store the BSON Id from the dataitem object.
         public class UserIdentity
         {

@@ -5,13 +5,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
-using Simplistant_API.Attributes;
+using Simplistant_API.Domain.Attributes;
+using Simplistant_API.Domain.Auth;
+using Simplistant_API.Domain.Extensions;
 using Simplistant_API.DTO;
 using Simplistant_API.DTO.Account;
-using Simplistant_API.Extensions;
+using Simplistant_API.Models.Repository;
 using Simplistant_API.Models.System;
 using Simplistant_API.Models.Users;
-using Simplistant_API.Repository;
 using Simplistant_API.Utility.Interface;
 
 using static BCrypt.Net.BCrypt;
@@ -668,7 +669,7 @@ namespace Simplistant_API.Controllers
             _emailDataRepository.RemoveWhere(x => true);
             _authDataRepository.RemoveWhere(x => true);
             _recoveryDataRepository.RemoveWhere(x => true);
-            RepositoryFactory.Create<ExceptionLog>(DatabaseSelector.System).RemoveWhere(x => true);
+            Repositories.System<ExceptionLog>().RemoveWhere(x => true);
             return true;
         }
 

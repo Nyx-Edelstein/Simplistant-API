@@ -1,20 +1,24 @@
-﻿using Simplistant_API.Utility.Interface;
-using System.Security.Claims;
-using Simplistant_API.Extensions;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Simplistant_API.Domain.Extensions;
 using Simplistant_API.Models.Users;
-using Simplistant_API.Repository;
+using Simplistant_API.Models.Repository;
+using LiteDB;
 
 using static BCrypt.Net.BCrypt;
 
-namespace Simplistant_API.Utility
+
+namespace Simplistant_API.Domain.Auth
 {
     public class UserAuthenticator : IUserAuthenticator
     {
         private IRepository<AuthData> _authDataRepository { get; }
+        private IRepository<LoginData> _loginDataRepository { get; }
 
-        public UserAuthenticator(IRepository<AuthData> authDataRepository)
+        public UserAuthenticator(IRepository<AuthData> authDataRepository, IRepository<LoginData> loginDataRepository)
         {
             _authDataRepository = authDataRepository;
+            _loginDataRepository = loginDataRepository;
         }
 
         public void GenerateSession(HttpContext context, string username)
@@ -54,9 +58,15 @@ namespace Simplistant_API.Utility
             if (authData != null)
             {
                 //User is authenticated
+                //Get userId (for resolving Data repositories)
+                var userId = _loginDataRepository.GetWhere(x => x.Username == username)
+                    .FirstOrDefault()?.Id ?? ObjectId.Empty;
+
+                //Set claims
                 context.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, username),
+                    new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 }, "Authenticated"));
 
                 //Determine if a session needs to be generated

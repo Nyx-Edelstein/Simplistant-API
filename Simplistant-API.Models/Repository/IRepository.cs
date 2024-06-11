@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Simplistant_API.Repository
+namespace Simplistant_API.Models.Repository
 {
     public interface IRepository<T>
     {

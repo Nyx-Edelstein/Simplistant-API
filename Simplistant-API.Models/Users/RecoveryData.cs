@@ -1,6 +1,4 @@
-﻿using Simplistant_API.Repository;
-
-namespace Simplistant_API.Models.Users
+﻿namespace Simplistant_API.Models.Users
 {
     [HasStringKey("Username", isUnique: false)]
     public class RecoveryData : DataItem

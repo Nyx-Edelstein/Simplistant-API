@@ -1,4 +1,4 @@
-﻿namespace Simplistant_API.Extensions
+﻿namespace Simplistant_API.Domain.Extensions
 {
     public static class ExceptionExtensions
     {

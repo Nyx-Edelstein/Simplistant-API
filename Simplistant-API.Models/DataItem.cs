@@ -1,6 +1,6 @@
 ﻿using LiteDB;
 
-namespace Simplistant_API.Repository
+namespace Simplistant_API.Models
 {
     public abstract class DataItem
     {
