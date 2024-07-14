@@ -35,11 +35,14 @@ namespace Simplistant_API.Domain.NotesRepository
 
         public void Save(Note noteDTO)
         {
-            //Todo: might be an issue with Guid.Parse
+            //Todo: potential issue of orphaning notes if historyId is malformed or something
+            //But this at least prevents a parse exception
+            var parsed = Guid.TryParse(noteDTO.HistoryId, out var historyId);
+
             var note = new NoteData
             {
                 Id = ObjectId.NewObjectId(),
-                HistoryId = Guid.Parse(noteDTO.HistoryId),
+                HistoryId = parsed ? historyId : Guid.NewGuid(),
                 Title = noteDTO.Title,
                 Tags = noteDTO.Tags.ToArray(),
                 Markdown = noteDTO.Markdown,

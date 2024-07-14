@@ -26,12 +26,14 @@ namespace Simplistant_API.Domain.Auth
             //Generate auth data and store securely
             var authData = new AuthData
             {
+                Id = ObjectId.NewObjectId(),
                 Username = username,
                 AuthToken = GenerateSalt(),
                 Expiry = DateTime.UtcNow.AddDays(14)
             };
             var secureAuthData = new AuthData
             {
+                Id = authData.Id,
                 Username = authData.Username,
                 AuthToken = HashPassword(authData.AuthToken),
                 Expiry = authData.Expiry,
@@ -44,19 +46,20 @@ namespace Simplistant_API.Domain.Auth
 
         public bool Authenticate(HttpContext context)
         {
-            var username = context.GetCurrentUser();
-            var authToken = context.GetUserAuthToken();
+            var cookieAuthData = context.GetUserAuthData();
 
             //Remove expired auth data
             _authDataRepository.RemoveWhere(x => x.Expiry < DateTime.UtcNow);
 
             //Get existing data
-            var existingAuthData = _authDataRepository.GetWhere(x => x.Username == username);
+            var dbAuthData = _authDataRepository.GetWhere(x => x.Id == cookieAuthData.Id).FirstOrDefault();
 
-            //Find if any are valid
-            var authData = existingAuthData.FirstOrDefault(x => Verify(authToken, x.AuthToken));
-            if (authData != null)
+            //Verify the auth data
+            var isValid = dbAuthData != null && Verify(cookieAuthData.AuthToken, dbAuthData.AuthToken);
+            if (isValid)
             {
+                var username = dbAuthData.Username;
+
                 //User is authenticated
                 //Get userId (for resolving Data repositories)
                 var userId = _loginDataRepository.GetWhere(x => x.Username == username)
@@ -71,7 +74,7 @@ namespace Simplistant_API.Domain.Auth
 
                 //Determine if a session needs to be generated
                 //This prevents the user from having to login again if they use the service regularly
-                if (authData.Expiry < DateTime.UtcNow.AddDays(7))
+                if (dbAuthData.Expiry < DateTime.UtcNow.AddDays(7))
                 {
                     GenerateSession(context, username);
                 }
